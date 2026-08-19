@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BlogPost, BlogPostFormData } from '../types/blog';
 import { getAllBlogPosts, saveBlogPost, deleteBlogPost, getBlogPostById } from '../db/blogRepository';
-import { getImagesByIds, saveImage, deleteImage } from '../db/imageRepository';
+import { getImagesByIds, saveImage, deleteImage, getImageById } from '../db/imageRepository';
 import { compressImageFile } from '../utils/imageCompressor';
 import { ImageRecord } from '../types/trade';
 
@@ -29,16 +29,25 @@ export function useBlog() {
     const id = formData.id || `blog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
 
-    const finalImageRefs: string[] = [];
+    const imageRefSet = new Set<string>();
 
-    // Keep existing images
+    // 1. Keep existing images passed in formData
     if (formData.existingImages && formData.existingImages.length > 0) {
       for (const img of formData.existingImages) {
-        finalImageRefs.push(img.id);
+        imageRefSet.add(img.id);
       }
     }
 
-    // Process new images (compress and save blob)
+    // 2. Automatically extract image IDs embedded in markdown content: /api/images/(id)
+    const inlineImageRegex = /\/api\/images\/([a-zA-Z0-9_-]+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = inlineImageRegex.exec(formData.content || '')) !== null) {
+      if (match[1]) {
+        imageRefSet.add(match[1]);
+      }
+    }
+
+    // 3. Process any new file uploads if passed
     if (formData.newImages && formData.newImages.length > 0) {
       for (const file of formData.newImages) {
         const { blob, mimeType } = await compressImageFile(file);
@@ -53,11 +62,22 @@ export function useBlog() {
           createdAt: now,
         };
         await saveImage(imageRecord);
-        finalImageRefs.push(imageId);
+        imageRefSet.add(imageId);
       }
     }
 
-    // Clean up any removed images
+    const finalImageRefs = Array.from(imageRefSet);
+
+    // 4. Update ownerId for all images referenced by this post
+    for (const imgId of finalImageRefs) {
+      const img = await getImageById(imgId);
+      if (img && img.ownerId !== id) {
+        img.ownerId = id;
+        await saveImage(img);
+      }
+    }
+
+    // 5. Clean up deleted images that were previously in old post
     const oldPost = posts.find((p) => p.id === id);
     if (oldPost && oldPost.imageRefs) {
       const removedIds = oldPost.imageRefs.filter((oldId) => !finalImageRefs.includes(oldId));
@@ -83,11 +103,19 @@ export function useBlog() {
   };
 
   const removePost = async (id: string): Promise<void> => {
+    // Delete all associated images
+    const postToDelete = posts.find((p) => p.id === id);
+    if (postToDelete && postToDelete.imageRefs) {
+      for (const imgId of postToDelete.imageRefs) {
+        await deleteImage(imgId);
+      }
+    }
     await deleteBlogPost(id);
     await refreshPosts();
   };
 
   const loadPostImages = async (imageRefs: string[]): Promise<ImageRecord[]> => {
+    if (!imageRefs || imageRefs.length === 0) return [];
     return getImagesByIds(imageRefs);
   };
 

@@ -30,7 +30,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
     while ((match = imageRegex.exec(text)) !== null) {
       const altText = match[1] || 'Hình ảnh';
-      const imgUrl = match[2];
+      const imgUrl = match[2].trim();
       const matchIndex = match.index;
 
       if (matchIndex > lastIndex) {
@@ -41,16 +41,28 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         <div key={`img-${matchIndex}`} className="my-3 block">
           <div
             onClick={() => setLightboxImage({ url: imgUrl, title: altText })}
-            className="group relative inline-block max-w-full rounded-xl overflow-hidden border border-line bg-[#0c0e0c] cursor-zoom-in hover:border-accent/80 transition-all shadow-md"
+            className="group relative inline-block max-w-full rounded-xl overflow-hidden border border-line bg-[#0c0e0c] cursor-zoom-in hover:border-accent transition-all shadow-md"
           >
             <img
               src={imgUrl}
               alt={altText}
-              className="max-h-[480px] w-auto max-w-full object-contain rounded-xl transition-transform duration-200 group-hover:scale-[1.01]"
+              className="max-h-[500px] w-auto max-w-full object-contain rounded-xl transition-transform duration-200 group-hover:scale-[1.01]"
               loading="lazy"
+              onError={(e) => {
+                // Handle fallback if broken
+                const target = e.currentTarget;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  const fallback = document.createElement('div');
+                  fallback.className = 'p-4 text-xs text-loss bg-loss-soft/20 text-center';
+                  fallback.innerText = `Không thể tải ảnh: ${altText}`;
+                  parent.appendChild(fallback);
+                }
+              }}
             />
-            {altText && altText !== 'Hình ảnh' && (
-              <span className="block px-3 py-1.5 text-[11px] text-muted text-center bg-surface-2/80 border-t border-line/50">
+            {altText && altText !== 'Hình ảnh' && altText !== 'Biểu đồ' && (
+              <span className="block px-3 py-1.5 text-[11px] text-muted text-center bg-surface-2/80 border-t border-line/50 truncate max-w-full">
                 {altText}
               </span>
             )}
@@ -213,17 +225,27 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       continue;
     }
 
+    // Standalone image on its own line
+    if (line.trim().startsWith('![') && line.trim().includes('](')) {
+      elements.push(
+        <div key={i} className="my-2">
+          {renderInlineFormatted(line)}
+        </div>
+      );
+      continue;
+    }
+
     // Empty line
     if (!line.trim()) {
       elements.push(<div key={i} className="h-2" />);
       continue;
     }
 
-    // Standard Paragraph
+    // Standard Paragraph (use div with text styling so embedded elements don't violate <p> DOM tree)
     elements.push(
-      <p key={i} className="text-xs text-text leading-relaxed my-1">
+      <div key={i} className="text-xs text-text leading-relaxed my-1">
         {renderInlineFormatted(line)}
-      </p>
+      </div>
     );
   }
 

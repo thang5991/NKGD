@@ -1,1 +1,83 @@
-[]
+[
+  {
+    "id": "img-blog-1787132976059-5n7ua",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-2",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T09:49:36.059Z",
+    "url": "/api/images/img-blog-1787132976059-5n7ua"
+  },
+  {
+    "id": "img-blog-1787132987163-2apkw",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-2",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T09:49:47.163Z",
+    "url": "/api/images/img-blog-1787132987163-2apkw"
+  },
+  {
+    "id": "img-blog-1787133805088-46ekq",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-2",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:03:25.088Z",
+    "url": "/api/images/img-blog-1787133805088-46ekq"
+  },
+  {
+    "id": "img-blog-1787133848792-quqge",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-1",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:04:08.792Z",
+    "url": "/api/images/img-blog-1787133848792-quqge"
+  },
+  {
+    "id": "img-blog-1787133866643-b7b47",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-1",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:04:26.643Z",
+    "url": "/api/images/img-blog-1787133866643-b7b47"
+  },
+  {
+    "id": "img-blog-1787133956871-5gbe9",
+    "ownerType": "blog",
+    "ownerId": "blog-temp",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:05:56.872Z",
+    "url": "/api/images/img-blog-1787133956871-5gbe9"
+  },
+  {
+    "id": "img-blog-1787133967581-o8o35",
+    "ownerType": "blog",
+    "ownerId": "blog-temp",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:06:07.581Z",
+    "url": "/api/images/img-blog-1787133967581-o8o35"
+  },
+  {
+    "id": "img-blog-1787134117018-u8t3i",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-1",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:08:37.018Z",
+    "url": "/api/images/img-blog-1787134117018-u8t3i"
+  },
+  {
+    "id": "img-blog-1787134158880-rb3yi",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-1",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:09:18.880Z",
+    "url": "/api/images/img-blog-1787134158880-rb3yi"
+  }
+]

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BlogPost, BlogPostFormData, BlogType } from '../../types/blog';
 import { ImageRecord } from '../../types/trade';
 import { MarkdownToolbar } from './MarkdownToolbar';
+import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';
 import { Lightbox } from '../../components/common/Lightbox';
 import { useToast } from '../../hooks/useToast';
 import { formatDateTime } from '../../utils/formatters';
@@ -17,6 +18,9 @@ import {
   Clock,
   ArrowLeft,
   Loader2,
+  Eye,
+  Edit3,
+  Columns,
 } from 'lucide-react';
 
 interface BlogEditorProps {
@@ -26,6 +30,8 @@ interface BlogEditorProps {
   onDelete: (id: string) => Promise<void>;
   loadImages: (refs: string[]) => Promise<ImageRecord[]>;
 }
+
+type EditorTab = 'edit' | 'preview' | 'split';
 
 export const BlogEditor: React.FC<BlogEditorProps> = ({
   post,
@@ -40,6 +46,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const [type, setType] = useState<BlogType>('journal');
   const [tagsInput, setTagsInput] = useState('');
   const [content, setContent] = useState('');
+  const [activeTab, setActiveTab] = useState<EditorTab>('edit');
 
   const [existingImages, setExistingImages] = useState<ImageRecord[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -48,10 +55,10 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const [saving, setSaving] = useState(false);
 
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [lightboxTitle] = useState('Hình ảnh');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastCursorPosRef = useRef<number>(0);
 
   // Sync editor state when active post changes
   useEffect(() => {
@@ -84,6 +91,13 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
     if (isSaved) setIsSaved(false);
   };
 
+  // Remember cursor position on blur or keyup/click
+  const updateCursorPos = () => {
+    if (textareaRef.current) {
+      lastCursorPosRef.current = textareaRef.current.selectionStart || 0;
+    }
+  };
+
   // Word count & Char count
   const wordCount = React.useMemo(() => {
     const text = content.trim();
@@ -96,8 +110,8 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const insertTextAtCursor = (textToInsert: string) => {
     const textarea = textareaRef.current;
     if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      const start = textarea.selectionStart !== undefined ? textarea.selectionStart : lastCursorPosRef.current;
+      const end = textarea.selectionEnd !== undefined ? textarea.selectionEnd : start;
       const val = textarea.value;
 
       const newContent = val.substring(0, start) + textToInsert + val.substring(end);
@@ -109,6 +123,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
         const newPos = start + textToInsert.length;
         textarea.selectionStart = newPos;
         textarea.selectionEnd = newPos;
+        lastCursorPosRef.current = newPos;
       });
     } else {
       setContent((prev) => prev + textToInsert);
@@ -134,6 +149,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
       textarea.focus();
       textarea.selectionStart = start + before.length;
       textarea.selectionEnd = start + before.length + selected.length;
+      lastCursorPosRef.current = textarea.selectionEnd;
     });
   };
 
@@ -287,7 +303,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
         tags,
         content,
         existingImages,
-        newImages: [], // Already saved to disk immediately
+        newImages: [],
       });
 
       setIsSaved(true);
@@ -435,25 +451,107 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
           </div>
         </div>
 
-        {/* Markdown Toolbar with Image Picker */}
-        <MarkdownToolbar
-          onInsert={handleInsertMarkdown}
-          onInsertTemplate={handleInsertTemplate}
-          onSelectImageFile={processAndInsertImages}
-        />
+        {/* View Mode Switcher: Soạn thảo / Xem trước / Song song */}
+        <div className="flex items-center justify-between border-b border-line pb-2">
+          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0c0e0c] border border-line">
+            <button
+              type="button"
+              onClick={() => setActiveTab('edit')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'edit'
+                  ? 'bg-surface-2 text-accent shadow-sm'
+                  : 'text-muted hover:text-text'
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Soạn thảo</span>
+            </button>
 
-        {/* Textarea Content with Cursor-based Image Paste */}
-        <div className="flex-1 min-h-[300px] flex flex-col">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              handleModify();
-            }}
-            placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Đặt con trỏ chuột ở bất kỳ đâu rồi nhấn Ctrl+V để dán và chèn ảnh ngay tại vị trí đó)"
-            className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[320px]"
+            <button
+              type="button"
+              onClick={() => setActiveTab('preview')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'preview'
+                  ? 'bg-surface-2 text-accent shadow-sm'
+                  : 'text-muted hover:text-text'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Xem trước</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('split')}
+              className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                activeTab === 'split'
+                  ? 'bg-surface-2 text-accent shadow-sm'
+                  : 'text-muted hover:text-text'
+              }`}
+            >
+              <Columns className="w-3.5 h-3.5" />
+              <span>Song song</span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-muted">
+            Nhấn <kbd className="px-1.5 py-0.5 bg-surface-2 rounded border border-line text-accent font-mono">Ctrl+V</kbd> để dán ảnh trực tiếp vào bài
+          </div>
+        </div>
+
+        {/* Markdown Toolbar with Image Picker (only when in edit or split mode) */}
+        {activeTab !== 'preview' && (
+          <MarkdownToolbar
+            onInsert={handleInsertMarkdown}
+            onInsertTemplate={handleInsertTemplate}
+            onSelectImageFile={processAndInsertImages}
           />
+        )}
+
+        {/* Textarea Content & Live Preview Pane */}
+        <div className="flex-1 min-h-[340px] flex flex-col">
+          {activeTab === 'edit' && (
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                handleModify();
+              }}
+              onKeyUp={updateCursorPos}
+              onClick={updateCursorPos}
+              onBlur={updateCursorPos}
+              placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Đặt con trỏ chuột ở bất kỳ đâu rồi nhấn Ctrl+V để dán và chèn ảnh ngay tại vị trí đó)"
+              className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[340px]"
+            />
+          )}
+
+          {activeTab === 'preview' && (
+            <div className="flex-1 w-full bg-[#0c0e0c] border border-line rounded-xl p-6 overflow-y-auto min-h-[340px]">
+              <MarkdownRenderer content={content} />
+            </div>
+          )}
+
+          {activeTab === 'split' && (
+            <div className="grid grid-cols-2 gap-4 flex-1 min-h-[340px]">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  handleModify();
+                }}
+                onKeyUp={updateCursorPos}
+                onClick={updateCursorPos}
+                onBlur={updateCursorPos}
+                placeholder="Nội dung markdown..."
+                className="w-full h-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-none"
+              />
+              <div className="w-full h-full bg-[#0c0e0c] border border-line rounded-xl p-4 overflow-y-auto">
+                <MarkdownRenderer content={content} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Attached Images & Quick Re-insert Strip */}
@@ -464,7 +562,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 Hình ảnh đã lưu ({existingImages.length}) — Bấm vào ảnh để chèn lại thẻ ảnh vào vị trí con trỏ chuột
               </span>
               <span className="text-[10px] text-muted">
-                Dán ảnh (Ctrl+V) hoặc chọn ảnh để chèn trực tiếp vào vị trí con trỏ trong văn bản.
+                Dán ảnh (Ctrl+V) hoặc bấm "Thêm ảnh" để tải và chèn trực tiếp vào vị trí con trỏ trong văn bản.
               </span>
             </div>
 
@@ -494,7 +592,15 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 className="relative group rounded-lg overflow-hidden border border-line bg-bg aspect-video cursor-pointer hover:border-accent transition-all shadow-sm"
                 title="Bấm để chèn lại thẻ ảnh này vào vị trí con trỏ chuột trong bài viết"
               >
-                <img src={img.dataUrl || `/api/images/${img.id}`} alt={img.name} className="w-full h-full object-cover" />
+                <img
+                  src={img.dataUrl || `/api/images/${img.id}`}
+                  alt={img.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to direct API if dataUrl failed
+                    e.currentTarget.src = `/api/images/${img.id}`;
+                  }}
+                />
                 <span className="absolute bottom-0 inset-x-0 bg-black/75 text-[9px] text-accent p-0.5 text-center font-bold truncate">
                   + Chèn vào bài
                 </span>
@@ -549,7 +655,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
         isOpen={!!lightboxUrl}
         onClose={() => setLightboxUrl(null)}
         imageUrl={lightboxUrl || ''}
-        title={lightboxTitle}
+        title="Biểu đồ chi tiết"
       />
     </>
   );
