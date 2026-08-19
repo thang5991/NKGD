@@ -5,6 +5,7 @@ import { MarkdownToolbar } from './MarkdownToolbar';
 import { Lightbox } from '../../components/common/Lightbox';
 import { useToast } from '../../hooks/useToast';
 import { formatDateTime } from '../../utils/formatters';
+import { compressImageFile } from '../../utils/imageCompressor';
 import {
   Save,
   Trash2,
@@ -13,11 +14,13 @@ import {
   Image as ImageIcon,
   Check,
   Clock,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface BlogEditorProps {
   post: BlogPost | null;
   onSave: (data: BlogPostFormData) => Promise<void>;
+  onCancel: () => void;
   onDelete: (id: string) => Promise<void>;
   loadImages: (refs: string[]) => Promise<ImageRecord[]>;
 }
@@ -25,6 +28,7 @@ interface BlogEditorProps {
 export const BlogEditor: React.FC<BlogEditorProps> = ({
   post,
   onSave,
+  onCancel,
   onDelete,
   loadImages,
 }) => {
@@ -43,7 +47,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const [saving, setSaving] = useState(false);
 
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [lightboxTitle, setLightboxTitle] = useState('');
+  const [lightboxTitle] = useState('Hình ảnh');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,7 +95,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 
   const charCount = content.length;
 
-  // Insert markdown helpers
+  // Insert markdown helpers at cursor position
   const handleInsertMarkdown = (before: string, after: string = '', defaultText: string = '') => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -131,50 +135,81 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
     handleModify();
   };
 
-  // Image handling
+  // Process and insert image files directly at cursor position
+  const processAndInsertImages = async (files: File[]) => {
+    const validFiles: File[] = [];
+    const newPreviews: { id: string; url: string; name: string }[] = [];
+    let markdownImageTags = '';
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        showToast(`Tệp ${file.name} không phải là hình ảnh`, 'warn');
+        continue;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        showToast(`Tệp ${file.name} vượt quá dung lượng 15MB`, 'warn');
+        continue;
+      }
+
+      try {
+        const compressed = await compressImageFile(file, 1920, 0.85);
+        const previewUrl = URL.createObjectURL(compressed.blob);
+        const cleanName = file.name.replace(/\.[^/.]+$/, '').trim() || 'Biểu đồ phân tích';
+
+        const previewItem = {
+          id: `preview-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          url: previewUrl,
+          name: file.name,
+        };
+
+        validFiles.push(file);
+        newPreviews.push(previewItem);
+
+        // Markdown tag pointing to blob/preview URL
+        markdownImageTags += `\n\n![${cleanName}](${previewUrl})\n\n`;
+      } catch (err) {
+        console.error('Error compressing image:', err);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setNewImageFiles((prev) => [...prev, ...validFiles]);
+      setNewImagePreviews((prev) => [...prev, ...newPreviews]);
+
+      // Insert at textarea cursor position
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const val = textarea.value;
+
+        const updatedContent = val.substring(0, start) + markdownImageTags + val.substring(end);
+        setContent(updatedContent);
+        handleModify();
+
+        requestAnimationFrame(() => {
+          textarea.focus();
+          const newPos = start + markdownImageTags.length;
+          textarea.selectionStart = newPos;
+          textarea.selectionEnd = newPos;
+        });
+      } else {
+        setContent((prev) => prev + markdownImageTags);
+        handleModify();
+      }
+
+      showToast(`Đã chèn ${validFiles.length} ảnh vào đúng vị trí con trỏ!`, 'success');
+    }
+  };
+
+  // File input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    addFiles(Array.from(e.target.files));
+    processAndInsertImages(Array.from(e.target.files));
     e.target.value = '';
   };
 
-  const addFiles = (files: File[]) => {
-    const valid = files.filter((f) => {
-      if (!f.type.startsWith('image/')) {
-        showToast(`Tệp ${f.name} không phải là hình ảnh`, 'warn');
-        return false;
-      }
-      if (f.size > 12 * 1024 * 1024) {
-        showToast(`Tệp ${f.name} vượt quá 12MB`, 'warn');
-        return false;
-      }
-      return true;
-    });
-
-    const previews = valid.map((f) => ({
-      id: `preview-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      url: URL.createObjectURL(f),
-      name: f.name,
-    }));
-
-    setNewImageFiles((prev) => [...prev, ...valid]);
-    setNewImagePreviews((prev) => [...prev, ...previews]);
-    handleModify();
-  };
-
-  const removeExistingImage = (id: string) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== id));
-    handleModify();
-  };
-
-  const removeNewImage = (index: number) => {
-    URL.revokeObjectURL(newImagePreviews[index].url);
-    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
-    handleModify();
-  };
-
-  // Clipboard Paste Support (Ctrl+V)
+  // Clipboard Paste (Ctrl+V) handler
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -189,16 +224,49 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 
     if (files.length > 0) {
       e.preventDefault();
-      addFiles(files);
-      showToast(`Đã dán ${files.length} hình ảnh vào bài viết.`, 'info');
+      processAndInsertImages(files);
     }
   };
 
-  // Drag & Drop image files
+  // Drag & Drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      addFiles(Array.from(e.dataTransfer.files));
+      processAndInsertImages(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const removeExistingImage = (id: string) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== id));
+    handleModify();
+  };
+
+  const removeNewImage = (index: number) => {
+    URL.revokeObjectURL(newImagePreviews[index].url);
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    handleModify();
+  };
+
+  // Insert existing image link into markdown at cursor
+  const insertImageTagAtCursor = (imgName: string, imgUrl: string) => {
+    const tag = `\n\n![${imgName}](${imgUrl})\n\n`;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = textarea.value;
+      setContent(val.substring(0, start) + tag + val.substring(end));
+      handleModify();
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.selectionStart = start + tag.length;
+        textarea.selectionEnd = start + tag.length;
+      });
+      showToast(`Đã chèn ảnh vào nội dung!`, 'info');
+    } else {
+      setContent((prev) => prev + tag);
+      handleModify();
     }
   };
 
@@ -255,23 +323,33 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   return (
     <>
       <div
-        className="flex flex-col h-full bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4"
+        className="flex flex-col h-full bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4 overflow-y-auto"
         onPaste={handlePaste}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
-        {/* Editor Topbar: Title input + Save/Delete buttons */}
+        {/* Editor Topbar: Title input + Save/Cancel/Delete buttons */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-line pb-3">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              handleModify();
-            }}
-            placeholder="Tiêu đề bài viết, phân tích hoặc nhật ký..."
-            className="w-full text-lg sm:text-xl font-bold text-text bg-transparent border-0 border-b border-transparent focus:border-accent outline-none px-1 py-1 tracking-tight placeholder:text-muted-2"
-          />
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-line text-muted hover:text-text transition-colors"
+              title="Quay lại chế độ xem bài viết"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                handleModify();
+              }}
+              placeholder="Tiêu đề bài viết, phân tích hoặc nhật ký..."
+              className="w-full text-lg sm:text-xl font-bold text-text bg-transparent border-0 border-b border-transparent focus:border-accent outline-none px-1 py-1 tracking-tight placeholder:text-muted-2"
+            />
+          </div>
 
           <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
             {/* Save Status Badge */}
@@ -287,11 +365,19 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-3 py-1.5 text-xs font-semibold text-muted hover:text-text rounded-lg hover:bg-surface-2 transition-colors border border-line"
+            >
+              Hủy / Xem bài
+            </button>
+
             {post && (
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm(`Xóa bài viết "${post.title}"? Tất cả ảnh liên quan cũng sẽ bị xóa.`)) {
+                  if (confirm(`Xóa bài viết "${post.title}"? Tất cả ảnh liên quan cũng sẽ bị xóa khỏi ổ cứng.`)) {
                     onDelete(post.id);
                   }
                 }}
@@ -306,7 +392,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               type="button"
               disabled={saving}
               onClick={() => handleSave()}
-              className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2 px-4 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{saving ? 'Đang lưu...' : 'Lưu bài (Ctrl+S)'}</span>
@@ -353,13 +439,14 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
           </div>
         </div>
 
-        {/* Markdown Toolbar */}
+        {/* Markdown Toolbar with Image Picker */}
         <MarkdownToolbar
           onInsert={handleInsertMarkdown}
           onInsertTemplate={handleInsertTemplate}
+          onSelectImageFile={processAndInsertImages}
         />
 
-        {/* Textarea Content */}
+        {/* Textarea Content with Cursor-based Image Paste */}
         <div className="flex-1 min-h-[300px] flex flex-col">
           <textarea
             ref={textareaRef}
@@ -368,18 +455,20 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               setContent(e.target.value);
               handleModify();
             }}
-            placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Hỗ trợ định dạng Markdown và Paste ảnh Ctrl+V)"
-            className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[340px]"
+            placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Nhấn Ctrl+V ở bất kỳ đâu để dán và chèn ảnh trực tiếp tại vị trí con trỏ chuột)"
+            className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[320px]"
           />
         </div>
 
-        {/* Attached Images Section */}
+        {/* Attached Images & Quick Insert Strip */}
         <div className="border-t border-line pt-3 space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-text block">Hình ảnh đính kèm ({existingImages.length + newImagePreviews.length})</span>
+              <span className="text-xs font-bold text-text block">
+                Hình ảnh ({existingImages.length + newImagePreviews.length}) — Bấm vào ảnh để chèn lại thẻ ảnh vào nội dung
+              </span>
               <span className="text-[10px] text-muted">
-                Ảnh được nén và lưu dạng Blob. Có thể kéo thả hoặc Paste (Ctrl+V) trực tiếp.
+                Dán ảnh (Ctrl+V) hoặc kéo thả để chèn vào vị trí con trỏ chuột trong văn bản.
               </span>
             </div>
 
@@ -404,13 +493,14 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
             {existingImages.map((img) => (
               <div
                 key={img.id}
-                onClick={() => {
-                  setLightboxUrl(img.dataUrl || '');
-                  setLightboxTitle(img.name);
-                }}
-                className="relative group rounded-lg overflow-hidden border border-line bg-bg aspect-video cursor-zoom-in hover:border-accent transition-all shadow-sm"
+                onClick={() => insertImageTagAtCursor(img.name, img.dataUrl || `/api/images/${img.id}`)}
+                className="relative group rounded-lg overflow-hidden border border-line bg-bg aspect-video cursor-pointer hover:border-accent transition-all shadow-sm"
+                title="Bấm để chèn thẻ ảnh này vào vị trí con trỏ trong nội dung"
               >
-                <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" />
+                <img src={img.dataUrl || `/api/images/${img.id}`} alt={img.name} className="w-full h-full object-cover" />
+                <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-muted p-0.5 text-center truncate">
+                  + Chèn vào bài
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -428,14 +518,14 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
             {newImagePreviews.map((prev, idx) => (
               <div
                 key={prev.id}
-                onClick={() => {
-                  setLightboxUrl(prev.url);
-                  setLightboxTitle(prev.name);
-                }}
-                className="relative group rounded-lg overflow-hidden border border-accent/40 bg-bg aspect-video cursor-zoom-in shadow-sm"
+                onClick={() => insertImageTagAtCursor(prev.name, prev.url)}
+                className="relative group rounded-lg overflow-hidden border border-accent/40 bg-bg aspect-video cursor-pointer shadow-sm"
+                title="Bấm để chèn thẻ ảnh này vào vị trí con trỏ trong nội dung"
               >
                 <img src={prev.url} alt={prev.name} className="w-full h-full object-cover" />
-                <span className="absolute bottom-1 left-1 bg-accent text-bg font-bold text-[9px] px-1 rounded">Mới</span>
+                <span className="absolute bottom-0 inset-x-0 bg-accent text-bg font-bold text-[9px] p-0.5 text-center truncate">
+                  + Chèn vào bài
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -456,7 +546,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 className="col-span-full border border-dashed border-line rounded-lg p-3 text-center cursor-pointer hover:border-line-strong transition-colors flex items-center justify-center gap-2 text-xs text-muted"
               >
                 <ImageIcon className="w-4 h-4 text-accent" />
-                <span>Bấm để đính kèm ảnh biểu đồ hoặc nhấn Ctrl+V để dán trực tiếp</span>
+                <span>Bấm để chèn ảnh vào văn bản hoặc nhấn Ctrl+V bất kỳ đâu để dán trực tiếp</span>
               </div>
             )}
           </div>

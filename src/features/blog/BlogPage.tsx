@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useBlog } from '../../hooks/useBlog';
 import { BlogList } from './BlogList';
 import { BlogEditor } from './BlogEditor';
+import { BlogView } from './BlogView';
 import { BlogPostFormData } from '../../types/blog';
 import { PlusCircle, BookOpen, ArrowLeft } from 'lucide-react';
 
@@ -9,8 +10,9 @@ export const BlogPage: React.FC = () => {
   const { posts, loading, savePostWithImages, removePost, loadPostImages } = useBlog();
 
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const [showMobileEditor, setShowMobileEditor] = useState(false);
+  const [showMobilePane, setShowMobilePane] = useState(false);
 
   // Active selected post
   const activePost = useMemo(() => {
@@ -23,19 +25,38 @@ export const BlogPage: React.FC = () => {
 
   const handleSelectPost = (id: string) => {
     setIsCreatingNew(false);
+    setIsEditing(false); // Default to clean view mode
     setSelectedPostId(id);
-    setShowMobileEditor(true);
+    setShowMobilePane(true);
   };
 
   const handleNewPost = () => {
     setIsCreatingNew(true);
+    setIsEditing(true); // Edit mode for new post
     setSelectedPostId(null);
-    setShowMobileEditor(true);
+    setShowMobilePane(true);
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (isCreatingNew) {
+      setIsCreatingNew(false);
+      setIsEditing(false);
+      if (posts.length > 0) {
+        setSelectedPostId(posts[0].id);
+      }
+    } else {
+      setIsEditing(false);
+    }
   };
 
   const handleSave = async (data: BlogPostFormData) => {
     const saved = await savePostWithImages(data);
     setIsCreatingNew(false);
+    setIsEditing(false); // Switch to clean reading view after saving
     setSelectedPostId(saved.id);
   };
 
@@ -43,7 +64,8 @@ export const BlogPage: React.FC = () => {
     await removePost(id);
     setSelectedPostId(null);
     setIsCreatingNew(false);
-    setShowMobileEditor(false);
+    setIsEditing(false);
+    setShowMobilePane(false);
   };
 
   if (loading) {
@@ -59,7 +81,7 @@ export const BlogPage: React.FC = () => {
       {/* Left List Column (4 cols on lg) */}
       <div
         className={`lg:col-span-4 h-full ${
-          showMobileEditor ? 'hidden lg:block' : 'block'
+          showMobilePane ? 'hidden lg:block' : 'block'
         }`}
       >
         <BlogList
@@ -70,16 +92,16 @@ export const BlogPage: React.FC = () => {
         />
       </div>
 
-      {/* Right Editor Column (8 cols on lg) */}
+      {/* Right Content Column (8 cols on lg): View vs Edit */}
       <div
         className={`lg:col-span-8 h-full flex flex-col ${
-          !showMobileEditor && posts.length > 0 ? 'hidden lg:flex' : 'flex'
+          !showMobilePane && posts.length > 0 ? 'hidden lg:flex' : 'flex'
         }`}
       >
         {/* Mobile Back Button */}
         <div className="lg:hidden mb-2">
           <button
-            onClick={() => setShowMobileEditor(false)}
+            onClick={() => setShowMobilePane(false)}
             className="flex items-center gap-1.5 text-xs text-muted hover:text-text px-2 py-1 rounded bg-surface border border-line"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -87,12 +109,25 @@ export const BlogPage: React.FC = () => {
           </button>
         </div>
 
-        {activePost || isCreatingNew ? (
+        {isEditing ? (
+          /* EDIT MODE: Only shown when creating new or clicking "Chỉnh sửa" */
           <div className="flex-1 overflow-y-auto">
             <BlogEditor
               post={isCreatingNew ? null : activePost}
               onSave={handleSave}
+              onCancel={handleCancelEdit}
               onDelete={handleDelete}
+              loadImages={loadPostImages}
+            />
+          </div>
+        ) : activePost ? (
+          /* VIEW MODE: Clean, elegant reading mode without editor clutter */
+          <div className="flex-1 overflow-y-auto">
+            <BlogView
+              post={activePost}
+              onEdit={handleStartEdit}
+              onDelete={handleDelete}
+              onNewPost={handleNewPost}
               loadImages={loadPostImages}
             />
           </div>
@@ -102,9 +137,9 @@ export const BlogPage: React.FC = () => {
             <div className="w-14 h-14 rounded-full bg-accent-soft text-accent flex items-center justify-center mb-4">
               <BookOpen className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-text mb-1">Chưa chọn bài viết</h3>
+            <h3 className="text-base font-bold text-text mb-1">Chưa có bài viết nào</h3>
             <p className="text-xs text-muted max-w-sm mb-5 leading-relaxed">
-              Tạo bài viết mới để lưu trữ phân tích kỹ thuật, chiến lược, nhật ký tâm lý và đính kèm hình ảnh biểu đồ.
+              Tạo bài viết mới để lưu trữ phân tích kỹ thuật, chiến lược, nhật ký tâm lý và đính kèm hình ảnh biểu đồ trực tiếp vào nội dung.
             </p>
             <button
               onClick={handleNewPost}

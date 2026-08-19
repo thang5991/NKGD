@@ -84,13 +84,14 @@ npm run server
 
 ### 4. ✍️ Blog / Notes (Module Độc lập)
 - Module riêng biệt hoàn toàn với Trade Notes, lưu trữ tại `data/blog.json`.
+- **Giao diện Tối ưu Đọc & Soạn thảo (Reading vs Edit Mode)**: Mặc định hiển thị bài viết sạch đẹp, trang nhã, không bị rối mắt bởi các ô nhập liệu; chỉ hiện trình soạn thảo khi bấm nút **"Chỉnh sửa"** hoặc **"Viết bài mới"**.
+- **Chèn & Dán ảnh ở bất kỳ đâu trong nội dung**: Hỗ trợ dán trực tiếp (`Ctrl+V`) hoặc bấm nút *"Chèn ảnh"* trên thanh công cụ để tự động chèn thẻ ảnh `![Mô tả](url)` **đúng ngay tại vị trí con trỏ chuột** trong văn bản.
+- **Trình đọc Markdown Chuyên nghiệp (MarkdownRenderer)**: Hỗ trợ Tiêu đề H1/H2/H3, In đậm, In nghiêng, Checklist nhiệm vụ, Danh sách, Trích dẫn, Khối mã code màu, và ảnh biểu đồ nhúng trực tiếp kèm tính năng phóng to Lightbox khi bấm vào.
 - Phân loại bài viết: **Nhật ký (Journal)**, **Phân tích (Analysis)**, **Chiến lược (Strategy)**, **Bài học (Lesson)**, **Blog tự do**.
-- Thanh công cụ định dạng Markdown: In đậm, In nghiêng, Tiêu đề H2/H3, Danh sách, Checklist nhiệm vụ, Trích dẫn, Khối code, Nút chèn nhanh mẫu phân tích giao dịch.
-- Đếm từ và ký tự trực tiếp theo thời gian thực.
+- Đếm từ, số ký tự và thời gian đọc ước tính theo thời gian thực.
 - Trạng thái lưu: `Chưa lưu` / `Đã lưu`, thời gian cập nhật lần cuối.
 - Phím tắt lưu bài nhanh: `Ctrl + S` / `Cmd + S`.
-- Đính kèm nhiều hình ảnh, tự động nén và lưu trực tiếp vào thư mục `data/uploads/`.
-- Khi xóa bài viết, tất cả các file ảnh liên quan sẽ tự động được xóa khỏi ổ cứng.
+- Khi xóa bài viết, tất cả các file ảnh liên quan sẽ tự động được dọn dẹp sạch sẽ khỏi thư mục `data/uploads/`.
 
 ### 5. 🧮 Lot & Position Size Calculator (Medio Style)
 - Tính toán khối lượng vào lệnh chuẩn theo Pip Value thực tế.
