@@ -65,9 +65,6 @@ export const Header: React.FC<HeaderProps> = ({
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl md:text-2xl font-bold text-text tracking-tight">{current.title}</h1>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-accent-soft text-accent border border-accent-border">
-              ● Local
-            </span>
           </div>
           <p className="hidden sm:block text-xs text-muted mt-1">{current.subtitle}</p>
         </div>

@@ -124,5 +124,23 @@
     "mimeType": "image/jpeg",
     "createdAt": "2026-08-19T10:15:17.033Z",
     "url": "/api/images/img-blog-1787134517033-j5cna"
+  },
+  {
+    "id": "img-blog-1787134803950-mlkju",
+    "ownerType": "trade",
+    "ownerId": "blog-demo-1",
+    "name": "img-blog-1787134803950-mlkju.jpg",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:20:34.337Z",
+    "url": "/api/images/img-blog-1787134803950-mlkju"
+  },
+  {
+    "id": "img-blog-1787134832787-9nwm4",
+    "ownerType": "trade",
+    "ownerId": "blog-demo-1",
+    "name": "img-blog-1787134832787-9nwm4.jpg",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:20:34.348Z",
+    "url": "/api/images/img-blog-1787134832787-9nwm4"
   }
 ]

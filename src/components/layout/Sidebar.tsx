@@ -73,8 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div>
               <div className="font-bold text-sm text-text leading-tight tracking-tight">Trading Journal</div>
-              <div className="text-[10px] text-muted-2 tracking-wider uppercase font-semibold mt-0.5">
-                Local Only
+              <div className="text-[10px] text-accent tracking-wider uppercase font-semibold mt-0.5">
+                Personal OS
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           <div className="px-3 py-2 text-[10px] text-muted-2 leading-relaxed bg-surface/30 rounded-md border border-line/40">
-            Dữ liệu lưu an toàn trên IndexedDB trình duyệt này.
+            Dữ liệu lưu an toàn trên máy tính của bạn.
           </div>
         </div>
       </aside>
