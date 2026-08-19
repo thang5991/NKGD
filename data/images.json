@@ -79,5 +79,14 @@
     "mimeType": "image/jpeg",
     "createdAt": "2026-08-19T10:09:18.880Z",
     "url": "/api/images/img-blog-1787134158880-rb3yi"
+  },
+  {
+    "id": "img-blog-1787134306960-y3xl7",
+    "ownerType": "blog",
+    "ownerId": "blog-demo-1",
+    "name": "Screenshot 2026-07-29 at 21.49.59.png",
+    "mimeType": "image/jpeg",
+    "createdAt": "2026-08-19T10:11:46.961Z",
+    "url": "/api/images/img-blog-1787134306960-y3xl7"
   }
 ]
