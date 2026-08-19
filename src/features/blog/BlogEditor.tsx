@@ -60,7 +60,8 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastCursorPosRef = useRef<number>(0);
 
-  // Sync editor state when active post changes
+  // Sync editor state ONLY when switching to a different post ID
+  const postKey = post ? post.id : 'new';
   useEffect(() => {
     if (post) {
       setTitle(post.title || '');
@@ -84,14 +85,14 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
       setIsSaved(false);
       setExistingImages([]);
     }
-  }, [post, loadImages]);
+  }, [postKey, loadImages]);
 
   // Track modification
   const handleModify = () => {
     if (isSaved) setIsSaved(false);
   };
 
-  // Remember cursor position on blur or keyup/click
+  // Remember cursor position
   const updateCursorPos = () => {
     if (textareaRef.current) {
       lastCursorPosRef.current = textareaRef.current.selectionStart || 0;
@@ -106,51 +107,75 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 
   const charCount = content.length;
 
-  // Helper: insert text at textarea cursor position
+  // Safe and reliable helper: insert text at cursor without wiping anything
   const insertTextAtCursor = (textToInsert: string) => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart !== undefined ? textarea.selectionStart : lastCursorPosRef.current;
-      const end = textarea.selectionEnd !== undefined ? textarea.selectionEnd : start;
-      const val = textarea.value;
+    setContent((prevContent) => {
+      const textarea = textareaRef.current;
+      let start = prevContent.length;
+      let end = prevContent.length;
 
-      const newContent = val.substring(0, start) + textToInsert + val.substring(end);
-      setContent(newContent);
-      handleModify();
+      if (textarea && textarea.selectionStart !== undefined && textarea.selectionStart !== null) {
+        start = textarea.selectionStart;
+        end = textarea.selectionEnd;
+      } else if (
+        lastCursorPosRef.current !== undefined &&
+        lastCursorPosRef.current >= 0 &&
+        lastCursorPosRef.current <= prevContent.length
+      ) {
+        start = lastCursorPosRef.current;
+        end = lastCursorPosRef.current;
+      }
+
+      const next = prevContent.substring(0, start) + textToInsert + prevContent.substring(end);
+      const newPos = start + textToInsert.length;
+      lastCursorPosRef.current = newPos;
 
       requestAnimationFrame(() => {
-        textarea.focus();
-        const newPos = start + textToInsert.length;
-        textarea.selectionStart = newPos;
-        textarea.selectionEnd = newPos;
-        lastCursorPosRef.current = newPos;
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.selectionStart = newPos;
+          textareaRef.current.selectionEnd = newPos;
+        }
       });
-    } else {
-      setContent((prev) => prev + textToInsert);
-      handleModify();
-    }
+
+      return next;
+    });
+
+    handleModify();
   };
 
-  // Insert markdown helpers at cursor position
+  // Insert markdown formatting at cursor
   const handleInsertMarkdown = (before: string, after: string = '', defaultText: string = '') => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+    setContent((prevContent) => {
+      const textarea = textareaRef.current;
+      let start = prevContent.length;
+      let end = prevContent.length;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const val = textarea.value;
-    const selected = val.substring(start, end) || defaultText;
-    const replacement = before + selected + after;
+      if (textarea && textarea.selectionStart !== undefined) {
+        start = textarea.selectionStart;
+        end = textarea.selectionEnd;
+      } else if (lastCursorPosRef.current !== undefined && lastCursorPosRef.current <= prevContent.length) {
+        start = lastCursorPosRef.current;
+        end = lastCursorPosRef.current;
+      }
 
-    setContent(val.substring(0, start) + replacement + val.substring(end));
-    handleModify();
+      const selected = prevContent.substring(start, end) || defaultText;
+      const replacement = before + selected + after;
+      const next = prevContent.substring(0, start) + replacement + prevContent.substring(end);
 
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.selectionStart = start + before.length;
-      textarea.selectionEnd = start + before.length + selected.length;
-      lastCursorPosRef.current = textarea.selectionEnd;
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.selectionStart = start + before.length;
+          textareaRef.current.selectionEnd = start + before.length + selected.length;
+          lastCursorPosRef.current = textareaRef.current.selectionEnd;
+        }
+      });
+
+      return next;
     });
+
+    handleModify();
   };
 
   const handleInsertTemplate = () => {
@@ -217,7 +242,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
       if (newImagesList.length > 0) {
         setExistingImages((prev) => [...prev, ...newImagesList]);
         insertTextAtCursor(allTagsToInsert);
-        showToast(`Đã lưu và chèn ${newImagesList.length} ảnh vào nội dung!`, 'success');
+        showToast(`Đã tải lên và chèn ${newImagesList.length} ảnh vào nội dung!`, 'success');
       }
     } catch (err) {
       console.error('Lỗi khi chèn ảnh:', err);
@@ -229,7 +254,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 
   // File input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
+    if (!e.target.files || e.target.files.length === 0) return;
     processAndInsertImages(Array.from(e.target.files));
     e.target.value = '';
   };
@@ -277,7 +302,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
     const cleanName = img.name.replace(/\.[^/.]+$/, '').trim() || 'Biểu đồ';
     const tag = `\n\n![${cleanName}](/api/images/${img.id})\n\n`;
     insertTextAtCursor(tag);
-    showToast(`Đã chèn lại thẻ ảnh vào vị trí con trỏ!`, 'info');
+    showToast(`Đã chèn thẻ ảnh vào vị trí con trỏ!`, 'info');
   };
 
   // Save handler
