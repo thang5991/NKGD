@@ -1,6 +1,3 @@
-export const DB_NAME = 'TradingJournalDB';
-export const DB_VERSION = 1;
-
 export const STORES = {
   trades: 'trades',
   blog: 'blog',
@@ -11,140 +8,91 @@ export const STORES = {
 
 export type StoreName = (typeof STORES)[keyof typeof STORES];
 
-let dbInstance: IDBDatabase | null = null;
-let dbPromise: Promise<IDBDatabase> | null = null;
+const API_BASE = '/api/data';
 
-export function getDatabase(): Promise<IDBDatabase> {
-  if (dbInstance) {
-    return Promise.resolve(dbInstance);
+export async function dbGet<T>(storeName: StoreName, key: string | number): Promise<T | undefined> {
+  try {
+    const res = await fetch(`${API_BASE}/${storeName}/${encodeURIComponent(String(key))}`);
+    if (!res.ok) {
+      if (res.status === 404) return undefined;
+      throw new Error(`API error: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return data as T;
+  } catch (err) {
+    console.error(`Error in dbGet(${storeName}, ${key}):`, err);
+    return undefined;
   }
-  if (dbPromise) {
-    return dbPromise;
-  }
-
-  dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      if (!db.objectStoreNames.contains(STORES.trades)) {
-        const tradeStore = db.createObjectStore(STORES.trades, { keyPath: 'id' });
-        tradeStore.createIndex('date', 'date', { unique: false });
-        tradeStore.createIndex('symbol', 'symbol', { unique: false });
-      }
-
-      if (!db.objectStoreNames.contains(STORES.blog)) {
-        const blogStore = db.createObjectStore(STORES.blog, { keyPath: 'id' });
-        blogStore.createIndex('updatedAt', 'updatedAt', { unique: false });
-        blogStore.createIndex('type', 'type', { unique: false });
-      }
-
-      if (!db.objectStoreNames.contains(STORES.images)) {
-        const imageStore = db.createObjectStore(STORES.images, { keyPath: 'id' });
-        imageStore.createIndex('ownerId', 'ownerId', { unique: false });
-        imageStore.createIndex('ownerType', 'ownerType', { unique: false });
-      }
-
-      if (!db.objectStoreNames.contains(STORES.customPairs)) {
-        const pairStore = db.createObjectStore(STORES.customPairs, { keyPath: 'id' });
-        pairStore.createIndex('symbol', 'symbol', { unique: true });
-      }
-
-      if (!db.objectStoreNames.contains(STORES.settings)) {
-        db.createObjectStore(STORES.settings, { keyPath: 'key' });
-      }
-    };
-
-    request.onsuccess = () => {
-      dbInstance = request.result;
-      dbInstance.onversionchange = () => {
-        dbInstance?.close();
-        dbInstance = null;
-        dbPromise = null;
-      };
-      resolve(dbInstance);
-    };
-
-    request.onerror = () => {
-      dbPromise = null;
-      reject(request.error);
-    };
-  });
-
-  return dbPromise;
-}
-
-export async function dbGet<T>(storeName: StoreName, key: IDBValidKey): Promise<T | undefined> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const req = store.get(key);
-    req.onsuccess = () => resolve(req.result as T | undefined);
-    req.onerror = () => reject(req.error);
-  });
 }
 
 export async function dbGetAll<T>(storeName: StoreName): Promise<T[]> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const req = store.getAll();
-    req.onsuccess = () => resolve((req.result || []) as T[]);
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const res = await fetch(`${API_BASE}/${storeName}`);
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`);
+    }
+    const data = await res.json();
+    return (Array.isArray(data) ? data : []) as T[];
+  } catch (err) {
+    console.error(`Error in dbGetAll(${storeName}):`, err);
+    return [];
+  }
 }
 
 export async function dbPut<T>(storeName: StoreName, value: T): Promise<void> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    store.put(value);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
+  try {
+    const res = await fetch(`${API_BASE}/${storeName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`);
+    }
+  } catch (err) {
+    console.error(`Error in dbPut(${storeName}):`, err);
+    throw err;
+  }
 }
 
-export async function dbDelete(storeName: StoreName, key: IDBValidKey): Promise<void> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    store.delete(key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
+export async function dbDelete(storeName: StoreName, key: string | number): Promise<void> {
+  try {
+    const res = await fetch(`${API_BASE}/${storeName}/${encodeURIComponent(String(key))}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`);
+    }
+  } catch (err) {
+    console.error(`Error in dbDelete(${storeName}, ${key}):`, err);
+    throw err;
+  }
 }
 
 export async function dbClear(storeName: StoreName): Promise<void> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    store.clear();
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
+  try {
+    const res = await fetch(`${API_BASE}/${storeName}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`);
+    }
+  } catch (err) {
+    console.error(`Error in dbClear(${storeName}):`, err);
+    throw err;
+  }
 }
 
 export async function dbGetByIndex<T>(
   storeName: StoreName,
   indexName: string,
-  key: IDBValidKey
+  key: string | number
 ): Promise<T[]> {
-  const db = await getDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const index = store.index(indexName);
-    const req = index.getAll(key);
-    req.onsuccess = () => resolve((req.result || []) as T[]);
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const all = await dbGetAll<T>(storeName);
+    return all.filter((item: any) => String(item[indexName]) === String(key));
+  } catch (err) {
+    console.error(`Error in dbGetByIndex(${storeName}, ${indexName}, ${key}):`, err);
+    return [];
+  }
 }

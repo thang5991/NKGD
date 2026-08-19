@@ -1,0 +1,20 @@
+[
+  {
+    "id": "US30",
+    "symbol": "US30",
+    "displayName": "Dow Jones 30 Index",
+    "assetType": "indices",
+    "pipSize": 1.0,
+    "contractSize": 1,
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "NAS100",
+    "symbol": "NAS100",
+    "displayName": "Nasdaq 100 Index",
+    "assetType": "indices",
+    "pipSize": 1.0,
+    "contractSize": 1,
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  }
+]

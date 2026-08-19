@@ -1,4 +1,3 @@
-import { dbGet, dbPut, dbDelete, dbGetByIndex, STORES } from './indexedDb';
 import { ImageRecord } from '../types/trade';
 
 export function blobToDataUrl(blob: Blob): Promise<string> {
@@ -22,22 +21,53 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 export async function getImageById(id: string): Promise<ImageRecord | undefined> {
-  const record = await dbGet<ImageRecord>(STORES.images, id);
-  if (record && record.blob && !record.dataUrl) {
-    record.dataUrl = await blobToDataUrl(record.blob);
+  try {
+    const res = await fetch(`/api/images/${encodeURIComponent(id)}`);
+    if (!res.ok) return undefined;
+    const blob = await res.blob();
+    const dataUrl = await blobToDataUrl(blob);
+    return {
+      id,
+      ownerType: 'trade',
+      ownerId: '',
+      name: `${id}.jpg`,
+      mimeType: blob.type || 'image/jpeg',
+      blob,
+      dataUrl,
+      createdAt: new Date().toISOString(),
+    };
+  } catch (e) {
+    console.error(`Error loading image ${id}:`, e);
+    return undefined;
   }
-  return record;
 }
 
 export async function getImagesByOwner(ownerType: 'trade' | 'blog', ownerId: string): Promise<ImageRecord[]> {
-  const images = await dbGetByIndex<ImageRecord>(STORES.images, 'ownerId', ownerId);
-  const matching = images.filter((img) => img.ownerType === ownerType);
-  for (const img of matching) {
-    if (img.blob && !img.dataUrl) {
-      img.dataUrl = await blobToDataUrl(img.blob);
+  try {
+    const res = await fetch(`/api/images/by-owner/${encodeURIComponent(ownerId)}`);
+    if (!res.ok) return [];
+    const metaList: any[] = await res.json();
+    const results: ImageRecord[] = [];
+
+    for (const item of metaList) {
+      if (item.ownerType === ownerType) {
+        results.push({
+          id: item.id,
+          ownerType: item.ownerType,
+          ownerId: item.ownerId,
+          name: item.name,
+          mimeType: item.mimeType,
+          dataUrl: `/api/images/${item.id}`,
+          blob: new Blob([], { type: item.mimeType }),
+          createdAt: item.createdAt,
+        });
+      }
     }
+    return results;
+  } catch (e) {
+    console.error(`Error loading images for owner ${ownerId}:`, e);
+    return [];
   }
-  return matching;
 }
 
 export async function getImagesByIds(ids: string[]): Promise<ImageRecord[]> {
@@ -50,26 +80,46 @@ export async function getImagesByIds(ids: string[]): Promise<ImageRecord[]> {
 }
 
 export async function saveImage(image: ImageRecord): Promise<void> {
-  // Store blob in DB; dataUrl is stripped before saving to keep record lightweight
-  const toStore: ImageRecord = {
+  const dataUrl = image.dataUrl || (image.blob ? await blobToDataUrl(image.blob) : '');
+  if (!dataUrl) return;
+
+  const payload = {
     id: image.id,
     ownerType: image.ownerType,
     ownerId: image.ownerId,
     name: image.name,
-    mimeType: image.mimeType || image.blob.type || 'image/jpeg',
-    blob: image.blob,
+    mimeType: image.mimeType || 'image/jpeg',
+    dataUrl,
     createdAt: image.createdAt || new Date().toISOString(),
   };
-  await dbPut(STORES.images, toStore);
+
+  const res = await fetch('/api/images', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to save image to local disk: ${res.statusText}`);
+  }
 }
 
 export async function deleteImage(id: string): Promise<void> {
-  await dbDelete(STORES.images, id);
+  const res = await fetch(`/api/images/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete image: ${res.statusText}`);
+  }
 }
 
 export async function deleteImagesByOwner(ownerType: 'trade' | 'blog', ownerId: string): Promise<void> {
   const images = await getImagesByOwner(ownerType, ownerId);
   for (const img of images) {
-    await deleteImage(img.id);
+    try {
+      await deleteImage(img.id);
+    } catch (e) {
+      console.error(`Failed to delete image ${img.id}:`, e);
+    }
   }
 }
