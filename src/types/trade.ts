@@ -1,0 +1,47 @@
+export type Side = 'Long' | 'Short';
+export type Market = 'Forex' | 'Crypto' | 'Stock' | 'Futures' | 'Indices' | 'Commodities' | 'Other';
+export type Emotion = 'Bình tĩnh' | 'Tự tin' | 'FOMO' | 'Sợ hãi' | 'Tham lam' | 'Mệt mỏi' | 'Kỷ luật';
+
+export interface ImageRecord {
+  id: string;
+  ownerType: 'trade' | 'blog';
+  ownerId: string;
+  name: string;
+  mimeType: string;
+  blob: Blob;
+  dataUrl?: string; // transient/preview
+  createdAt: string;
+}
+
+export interface Trade {
+  id: string;
+  date: string; // ISO or YYYY-MM-DDTHH:mm
+  symbol: string;
+  side: Side;
+  market: Market;
+  setup: string;
+  emotion: Emotion;
+  entry: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  exit: number;
+  lot: number;
+  units: number;
+  fee: number;
+  notes: string;
+  imageRefs: string[]; // List of ImageRecord IDs
+  pnl: number;
+  riskAmount: number;
+  rMultiple: number;
+  plannedRR: number;
+  result: 'win' | 'loss' | 'be';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TradeFormData = Omit<Trade, 'id' | 'pnl' | 'riskAmount' | 'rMultiple' | 'plannedRR' | 'result' | 'createdAt' | 'updatedAt' | 'imageRefs'> & {
+  id?: string;
+  imageRefs?: string[];
+  newImages?: File[];
+  existingImages?: ImageRecord[];
+};
