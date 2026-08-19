@@ -3,31 +3,29 @@
     "id": "blog-demo-1",
     "title": "Chiến Lược Quản Lý Vốn 1% & R:R Tối Thiểu 1:2",
     "type": "strategy",
-    "category": "Quản lý vốn",
     "tags": [
       "Risk Management",
       "R:R",
       "Mindset"
     ],
     "content": "## 1. Nguyên Tắc Cốt Lõi\n- Không bao giờ mạo hiểm quá **1% tổng tài khoản** cho một lệnh giao dịch.\n- Tỷ lệ Lợi nhuận / Rủi ro (R:R) tối thiểu đạt **1:2** trước khi vào lệnh.\n\n## 2. Công Thức Tính Lot Thực Tế\n$$\\text{Risk Money} = \\text{Account Balance} \\times 1\\%$$\n$$\\text{Lot} = \\frac{\\text{Risk Money}}{\\text{Stop Loss (Pips)} \\times \\text{Pip Value}}$$\n\n## 3. Checklist Kỷ Luật\n- [x] Xác định vùng cản khung lớn (HTF)\n- [x] Đợi tín hiệu xác nhận (MSS / Liquidity Grab)\n- [x] Đặt Stop Loss tuyệt đối không dời xa hơn khi giá đi ngược\n- [x] Ghi nhật ký đầy đủ kèm ảnh phân tích",
-    "imageIds": [],
+    "imageRefs": [],
     "createdAt": "2026-08-01T08:00:00.000Z",
-    "updatedAt": "2026-08-01T08:00:00.000Z"
+    "updatedAt": "2026-08-19T09:46:27.578Z"
   },
   {
     "id": "blog-demo-2",
     "title": "Nhật Ký Tâm Lý: Vượt Qua Nỗi Sợ Bỏ Lỡ Cơ Hội (FOMO)",
     "type": "journal",
-    "category": "Tâm lý giao dịch",
     "tags": [
       "FOMO",
       "Kỷ luật",
       "Mindset"
     ],
     "content": "## Bài học sau tuần giao dịch vừa qua\nKhi thị trường chạy mạnh mà không có điểm vào theo đúng hệ thống:\n1. **Chấp nhận bỏ lỡ**: Thị trường mở cửa mỗi ngày, cơ hội luôn luôn xuất hiện trở lại.\n2. **Không vào lệnh đuổi (Chase price)**: Đuổi giá khiến tỷ lệ R:R bị phá vỡ và mức rủi ro tăng vọt.\n3. **Tắt bảng điện**: Khi đã đủ chỉ tiêu ngày hoặc sau một lệnh thua, đứng dậy rời khỏi màn hình.",
-    "imageIds": [],
+    "imageRefs": [],
     "createdAt": "2026-08-10T14:00:00.000Z",
-    "updatedAt": "2026-08-10T14:00:00.000Z"
+    "updatedAt": "2026-08-19T09:47:10.778Z"
   },
   {
     "id": "blog-1787131903762-t27tn",

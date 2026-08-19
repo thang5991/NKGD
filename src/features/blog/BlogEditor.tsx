@@ -6,6 +6,7 @@ import { Lightbox } from '../../components/common/Lightbox';
 import { useToast } from '../../hooks/useToast';
 import { formatDateTime } from '../../utils/formatters';
 import { compressImageFile } from '../../utils/imageCompressor';
+import { blobToDataUrl, saveImage, deleteImage } from '../../db/imageRepository';
 import {
   Save,
   Trash2,
@@ -15,6 +16,7 @@ import {
   Check,
   Clock,
   ArrowLeft,
+  Loader2,
 } from 'lucide-react';
 
 interface BlogEditorProps {
@@ -40,8 +42,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   const [content, setContent] = useState('');
 
   const [existingImages, setExistingImages] = useState<ImageRecord[]>([]);
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<{ id: string; url: string; name: string }[]>([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const [isSaved, setIsSaved] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,8 +68,6 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
       } else {
         setExistingImages([]);
       }
-      setNewImageFiles([]);
-      setNewImagePreviews([]);
     } else {
       // New post template
       setTitle('');
@@ -77,8 +76,6 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
       setContent('');
       setIsSaved(false);
       setExistingImages([]);
-      setNewImageFiles([]);
-      setNewImagePreviews([]);
     }
   }, [post, loadImages]);
 
@@ -94,6 +91,30 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
   }, [content]);
 
   const charCount = content.length;
+
+  // Helper: insert text at textarea cursor position
+  const insertTextAtCursor = (textToInsert: string) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = textarea.value;
+
+      const newContent = val.substring(0, start) + textToInsert + val.substring(end);
+      setContent(newContent);
+      handleModify();
+
+      requestAnimationFrame(() => {
+        textarea.focus();
+        const newPos = start + textToInsert.length;
+        textarea.selectionStart = newPos;
+        textarea.selectionEnd = newPos;
+      });
+    } else {
+      setContent((prev) => prev + textToInsert);
+      handleModify();
+    }
+  };
 
   // Insert markdown helpers at cursor position
   const handleInsertMarkdown = (before: string, after: string = '', defaultText: string = '') => {
@@ -131,74 +152,62 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 - Tâm lý trước khi bấm lệnh:
 - Điều cần cải thiện cho lệnh kế tiếp:`;
 
-    setContent((prev) => (prev ? `${prev}\n\n${tpl}` : tpl));
-    handleModify();
+    insertTextAtCursor(`\n\n${tpl}\n\n`);
   };
 
-  // Process and insert image files directly at cursor position
+  // Process, save to disk immediately, and insert image tag at cursor
   const processAndInsertImages = async (files: File[]) => {
-    const validFiles: File[] = [];
-    const newPreviews: { id: string; url: string; name: string }[] = [];
-    let markdownImageTags = '';
+    if (!files || files.length === 0) return;
 
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) {
-        showToast(`Tệp ${file.name} không phải là hình ảnh`, 'warn');
-        continue;
-      }
-      if (file.size > 15 * 1024 * 1024) {
-        showToast(`Tệp ${file.name} vượt quá dung lượng 15MB`, 'warn');
-        continue;
-      }
+    try {
+      setIsUploadingImage(true);
+      const newImagesList: ImageRecord[] = [];
+      let allTagsToInsert = '';
 
-      try {
-        const compressed = await compressImageFile(file, 1920, 0.85);
-        const previewUrl = URL.createObjectURL(compressed.blob);
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          showToast(`Tệp ${file.name} không phải là hình ảnh`, 'warn');
+          continue;
+        }
+
+        // 1. Compress image
+        const { blob, mimeType } = await compressImageFile(file, 1920, 0.85);
+        const dataUrl = await blobToDataUrl(blob);
+
+        // 2. Generate permanent image ID
+        const imageId = `img-blog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         const cleanName = file.name.replace(/\.[^/.]+$/, '').trim() || 'Biểu đồ phân tích';
 
-        const previewItem = {
-          id: `preview-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          url: previewUrl,
+        const imageRecord: ImageRecord = {
+          id: imageId,
+          ownerType: 'blog',
+          ownerId: post?.id || 'blog-temp',
           name: file.name,
+          mimeType,
+          blob,
+          dataUrl,
+          createdAt: new Date().toISOString(),
         };
 
-        validFiles.push(file);
-        newPreviews.push(previewItem);
+        // 3. Save directly to local disk API
+        await saveImage(imageRecord);
+        newImagesList.push(imageRecord);
 
-        // Markdown tag pointing to blob/preview URL
-        markdownImageTags += `\n\n![${cleanName}](${previewUrl})\n\n`;
-      } catch (err) {
-        console.error('Error compressing image:', err);
-      }
-    }
-
-    if (validFiles.length > 0) {
-      setNewImageFiles((prev) => [...prev, ...validFiles]);
-      setNewImagePreviews((prev) => [...prev, ...newPreviews]);
-
-      // Insert at textarea cursor position
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const val = textarea.value;
-
-        const updatedContent = val.substring(0, start) + markdownImageTags + val.substring(end);
-        setContent(updatedContent);
-        handleModify();
-
-        requestAnimationFrame(() => {
-          textarea.focus();
-          const newPos = start + markdownImageTags.length;
-          textarea.selectionStart = newPos;
-          textarea.selectionEnd = newPos;
-        });
-      } else {
-        setContent((prev) => prev + markdownImageTags);
-        handleModify();
+        // 4. Create markdown tag with permanent URL
+        const permUrl = `/api/images/${imageId}`;
+        allTagsToInsert += `\n\n![${cleanName}](${permUrl})\n\n`;
       }
 
-      showToast(`Đã chèn ${validFiles.length} ảnh vào đúng vị trí con trỏ!`, 'success');
+      if (newImagesList.length > 0) {
+        setExistingImages((prev) => [...prev, ...newImagesList]);
+        insertTextAtCursor(allTagsToInsert);
+        showToast(`Đã lưu và chèn ${newImagesList.length} ảnh vào nội dung!`, 'success');
+      }
+    } catch (err) {
+      console.error('Lỗi khi chèn ảnh:', err);
+      showToast('Không thể lưu ảnh vào ổ cứng', 'error');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -209,7 +218,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
     e.target.value = '';
   };
 
-  // Clipboard Paste (Ctrl+V) handler
+  // Clipboard Paste (Ctrl+V) anywhere on the editor / textarea
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -236,38 +245,23 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   };
 
-  const removeExistingImage = (id: string) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== id));
-    handleModify();
-  };
-
-  const removeNewImage = (index: number) => {
-    URL.revokeObjectURL(newImagePreviews[index].url);
-    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
-    handleModify();
-  };
-
-  // Insert existing image link into markdown at cursor
-  const insertImageTagAtCursor = (imgName: string, imgUrl: string) => {
-    const tag = `\n\n![${imgName}](${imgUrl})\n\n`;
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const val = textarea.value;
-      setContent(val.substring(0, start) + tag + val.substring(end));
+  const removeExistingImage = async (id: string) => {
+    try {
+      await deleteImage(id);
+      setExistingImages((prev) => prev.filter((img) => img.id !== id));
       handleModify();
-      requestAnimationFrame(() => {
-        textarea.focus();
-        textarea.selectionStart = start + tag.length;
-        textarea.selectionEnd = start + tag.length;
-      });
-      showToast(`Đã chèn ảnh vào nội dung!`, 'info');
-    } else {
-      setContent((prev) => prev + tag);
-      handleModify();
+      showToast('Đã xóa ảnh khỏi ổ cứng', 'info');
+    } catch (err) {
+      console.error('Lỗi xóa ảnh:', err);
     }
+  };
+
+  // Re-insert image tag at cursor when clicking an existing thumbnail
+  const reinsertImageAtCursor = (img: ImageRecord) => {
+    const cleanName = img.name.replace(/\.[^/.]+$/, '').trim() || 'Biểu đồ';
+    const tag = `\n\n![${cleanName}](/api/images/${img.id})\n\n`;
+    insertTextAtCursor(tag);
+    showToast(`Đã chèn lại thẻ ảnh vào vị trí con trỏ!`, 'info');
   };
 
   // Save handler
@@ -293,12 +287,10 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
         tags,
         content,
         existingImages,
-        newImages: newImageFiles,
+        newImages: [], // Already saved to disk immediately
       });
 
       setIsSaved(true);
-      setNewImageFiles([]);
-      setNewImagePreviews([]);
       showToast('Đã lưu bài viết thành công!', 'success');
     } catch (err) {
       console.error(err);
@@ -352,9 +344,13 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-            {/* Save Status Badge */}
+            {/* Uploading / Save Status Badge */}
             <div className="flex items-center gap-1 text-[11px] font-semibold text-muted mr-1">
-              {isSaved ? (
+              {isUploadingImage ? (
+                <span className="text-accent flex items-center gap-1">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang lưu ảnh...
+                </span>
+              ) : isSaved ? (
                 <span className="text-profit flex items-center gap-1">
                   <Check className="w-3.5 h-3.5" /> Đã lưu
                 </span>
@@ -390,7 +386,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
 
             <button
               type="button"
-              disabled={saving}
+              disabled={saving || isUploadingImage}
               onClick={() => handleSave()}
               className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
             >
@@ -455,27 +451,28 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               setContent(e.target.value);
               handleModify();
             }}
-            placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Nhấn Ctrl+V ở bất kỳ đâu để dán và chèn ảnh trực tiếp tại vị trí con trỏ chuột)"
+            placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Đặt con trỏ chuột ở bất kỳ đâu rồi nhấn Ctrl+V để dán và chèn ảnh ngay tại vị trí đó)"
             className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[320px]"
           />
         </div>
 
-        {/* Attached Images & Quick Insert Strip */}
+        {/* Attached Images & Quick Re-insert Strip */}
         <div className="border-t border-line pt-3 space-y-2">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-text block">
-                Hình ảnh ({existingImages.length + newImagePreviews.length}) — Bấm vào ảnh để chèn lại thẻ ảnh vào nội dung
+                Hình ảnh đã lưu ({existingImages.length}) — Bấm vào ảnh để chèn lại thẻ ảnh vào vị trí con trỏ chuột
               </span>
               <span className="text-[10px] text-muted">
-                Dán ảnh (Ctrl+V) hoặc kéo thả để chèn vào vị trí con trỏ chuột trong văn bản.
+                Dán ảnh (Ctrl+V) hoặc chọn ảnh để chèn trực tiếp vào vị trí con trỏ trong văn bản.
               </span>
             </div>
 
             <button
               type="button"
+              disabled={isUploadingImage}
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-2 hover:bg-surface-3 border border-line text-text transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-2 hover:bg-surface-3 border border-line text-text transition-colors disabled:opacity-50"
             >
               <Plus className="w-3.5 h-3.5" /> Thêm ảnh
             </button>
@@ -493,12 +490,12 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
             {existingImages.map((img) => (
               <div
                 key={img.id}
-                onClick={() => insertImageTagAtCursor(img.name, img.dataUrl || `/api/images/${img.id}`)}
+                onClick={() => reinsertImageAtCursor(img)}
                 className="relative group rounded-lg overflow-hidden border border-line bg-bg aspect-video cursor-pointer hover:border-accent transition-all shadow-sm"
-                title="Bấm để chèn thẻ ảnh này vào vị trí con trỏ trong nội dung"
+                title="Bấm để chèn lại thẻ ảnh này vào vị trí con trỏ chuột trong bài viết"
               >
                 <img src={img.dataUrl || `/api/images/${img.id}`} alt={img.name} className="w-full h-full object-cover" />
-                <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-muted p-0.5 text-center truncate">
+                <span className="absolute bottom-0 inset-x-0 bg-black/75 text-[9px] text-accent p-0.5 text-center font-bold truncate">
                   + Chèn vào bài
                 </span>
                 <button
@@ -515,32 +512,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               </div>
             ))}
 
-            {newImagePreviews.map((prev, idx) => (
-              <div
-                key={prev.id}
-                onClick={() => insertImageTagAtCursor(prev.name, prev.url)}
-                className="relative group rounded-lg overflow-hidden border border-accent/40 bg-bg aspect-video cursor-pointer shadow-sm"
-                title="Bấm để chèn thẻ ảnh này vào vị trí con trỏ trong nội dung"
-              >
-                <img src={prev.url} alt={prev.name} className="w-full h-full object-cover" />
-                <span className="absolute bottom-0 inset-x-0 bg-accent text-bg font-bold text-[9px] p-0.5 text-center truncate">
-                  + Chèn vào bài
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeNewImage(idx);
-                  }}
-                  className="absolute top-1 right-1 p-1 rounded bg-black/80 text-loss hover:text-white transition-colors"
-                  title="Xóa ảnh này"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-
-            {existingImages.length === 0 && newImagePreviews.length === 0 && (
+            {existingImages.length === 0 && (
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="col-span-full border border-dashed border-line rounded-lg p-3 text-center cursor-pointer hover:border-line-strong transition-colors flex items-center justify-center gap-2 text-xs text-muted"
