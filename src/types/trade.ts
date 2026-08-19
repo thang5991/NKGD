@@ -1,6 +1,7 @@
 export type Side = 'Long' | 'Short';
 export type Market = 'Forex' | 'Crypto' | 'Stock' | 'Futures' | 'Indices' | 'Commodities' | 'Other';
 export type Emotion = 'Bình tĩnh' | 'Tự tin' | 'FOMO' | 'Sợ hãi' | 'Tham lam' | 'Mệt mỏi' | 'Kỷ luật';
+export type Timeframe = 'M1' | 'M5' | 'M15' | 'M30' | 'H1' | 'H4' | 'D1' | 'W1' | 'MN' | string;
 
 export interface ImageRecord {
   id: string;
@@ -17,6 +18,7 @@ export interface Trade {
   id: string;
   date: string; // ISO or YYYY-MM-DDTHH:mm
   symbol: string;
+  timeframe?: Timeframe;
   side: Side;
   market: Market;
   setup: string;
@@ -45,3 +47,4 @@ export type TradeFormData = Omit<Trade, 'id' | 'pnl' | 'riskAmount' | 'rMultiple
   newImages?: File[];
   existingImages?: ImageRecord[];
 };
+

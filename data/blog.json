@@ -1,22 +1,5 @@
 [
   {
-    "id": "blog-demo-1",
-    "title": "Chiến Lược Quản Lý Vốn 1% & R:R Tối Thiểu 1:2",
-    "type": "strategy",
-    "tags": [
-      "Risk Management",
-      "R:R",
-      "Mindset"
-    ],
-    "content": "## 1. Nguyên Tắc Cốt Lõi\n- Không bao giờ mạo hiểm quá **1% tổng tài khoản** cho một lệnh giao dịch.\n- Tỷ lệ Lợi nhuận / Rủi ro (R:R) tối thiểu đạt **1:2** trước khi vào lệnh.\n\n## 2. Công Thức Tính Lot Thực Tế\n$$\\text{Risk Money} = \\text{Account Balance} \\times 1\\%$$\n\n\n![Screenshot 2026-07-29 at 21.49.59](/api/images/img-blog-1787134832787-9nwm4)\n\n\n$$\\text{Lot} = \\frac{\\text{Risk Money}}{\\text{Stop Loss (Pips)} \\times \\text{Pip Value}}$$\n\n## 3. Checklist Kỷ Luật\n- [x] Xác định vùng cản khung lớn (HTF)\n- [x] Đợi tín hiệu xác nhận (MSS / Liquidity Grab)\n- [x] Đặt Stop Loss tuyệt đối không dời xa hơn khi giá đi ngược\n- [x] Ghi nhật ký đầy đủ kèm ảnh phân tích\n\n\n\n![Screenshot 2026-07-29 at 21.49.59](/api/images/img-blog-1787134803950-mlkju)\n\n\n",
-    "imageRefs": [
-      "img-blog-1787134803950-mlkju",
-      "img-blog-1787134832787-9nwm4"
-    ],
-    "createdAt": "2026-08-01T08:00:00.000Z",
-    "updatedAt": "2026-08-19T10:20:34.327Z"
-  },
-  {
     "id": "blog-demo-2",
     "title": "Nhật Ký Tâm Lý: Vượt Qua Nỗi Sợ Bỏ Lỡ Cơ Hội (FOMO)",
     "type": "journal",
@@ -29,17 +12,5 @@
     "imageRefs": [],
     "createdAt": "2026-08-10T14:00:00.000Z",
     "updatedAt": "2026-08-19T09:49:50.579Z"
-  },
-  {
-    "id": "blog-1787131903762-t27tn",
-    "title": "Lưu local",
-    "type": "journal",
-    "tags": [
-      "Thử nghiệm"
-    ],
-    "content": "Thử nghiệm bài viết mới",
-    "imageRefs": [],
-    "createdAt": "2026-08-19T09:31:43.762Z",
-    "updatedAt": "2026-08-19T09:31:43.762Z"
   }
 ]

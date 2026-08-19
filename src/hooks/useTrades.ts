@@ -108,6 +108,7 @@ export function useTrades() {
       id,
       date: tradeData.date,
       symbol: tradeData.symbol.toUpperCase().trim(),
+      timeframe: tradeData.timeframe || 'M15',
       side: tradeData.side,
       market: tradeData.market,
       setup: tradeData.setup.trim(),

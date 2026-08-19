@@ -173,5 +173,33 @@
     "imageIds": [],
     "createdAt": "2026-08-18T07:10:00.000Z",
     "updatedAt": "2026-08-18T09:20:00.000Z"
+  },
+  {
+    "id": "trade-1787153166755-5zf4o",
+    "date": "2026-08-19T22:22",
+    "symbol": "EURUSD",
+    "timeframe": "M15",
+    "side": "Long",
+    "market": "Forex",
+    "setup": "",
+    "emotion": "Bình tĩnh",
+    "entry": 1,
+    "stopLoss": 0.999,
+    "takeProfit": 1.003,
+    "exit": 1.002,
+    "lot": 1,
+    "units": 100000,
+    "fee": 0,
+    "notes": "Cần phát huy",
+    "imageRefs": [
+      "img-1787153211604-hf3ek"
+    ],
+    "pnl": 200,
+    "riskAmount": 100,
+    "rMultiple": 2,
+    "plannedRR": 3,
+    "result": "win",
+    "createdAt": "2026-08-19T15:26:06.755Z",
+    "updatedAt": "2026-08-19T15:43:22.276Z"
   }
 ]

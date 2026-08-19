@@ -27,24 +27,6 @@
     "url": "/api/images/img-blog-1787133805088-46ekq"
   },
   {
-    "id": "img-blog-1787133848792-quqge",
-    "ownerType": "blog",
-    "ownerId": "blog-demo-1",
-    "name": "Screenshot 2026-07-29 at 21.49.59.png",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:04:08.792Z",
-    "url": "/api/images/img-blog-1787133848792-quqge"
-  },
-  {
-    "id": "img-blog-1787133866643-b7b47",
-    "ownerType": "blog",
-    "ownerId": "blog-demo-1",
-    "name": "Screenshot 2026-07-29 at 21.49.59.png",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:04:26.643Z",
-    "url": "/api/images/img-blog-1787133866643-b7b47"
-  },
-  {
     "id": "img-blog-1787133956871-5gbe9",
     "ownerType": "blog",
     "ownerId": "blog-temp",
@@ -61,33 +43,6 @@
     "mimeType": "image/jpeg",
     "createdAt": "2026-08-19T10:06:07.581Z",
     "url": "/api/images/img-blog-1787133967581-o8o35"
-  },
-  {
-    "id": "img-blog-1787134117018-u8t3i",
-    "ownerType": "blog",
-    "ownerId": "blog-demo-1",
-    "name": "Screenshot 2026-07-29 at 21.49.59.png",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:08:37.018Z",
-    "url": "/api/images/img-blog-1787134117018-u8t3i"
-  },
-  {
-    "id": "img-blog-1787134158880-rb3yi",
-    "ownerType": "blog",
-    "ownerId": "blog-demo-1",
-    "name": "Screenshot 2026-07-29 at 21.49.59.png",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:09:18.880Z",
-    "url": "/api/images/img-blog-1787134158880-rb3yi"
-  },
-  {
-    "id": "img-blog-1787134306960-y3xl7",
-    "ownerType": "blog",
-    "ownerId": "blog-demo-1",
-    "name": "Screenshot 2026-07-29 at 21.49.59.png",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:11:46.961Z",
-    "url": "/api/images/img-blog-1787134306960-y3xl7"
   },
   {
     "id": "img-blog-1787134449644-43f1u",
@@ -126,21 +81,12 @@
     "url": "/api/images/img-blog-1787134517033-j5cna"
   },
   {
-    "id": "img-blog-1787134803950-mlkju",
+    "id": "img-1787153211604-hf3ek",
     "ownerType": "trade",
-    "ownerId": "blog-demo-1",
-    "name": "img-blog-1787134803950-mlkju.jpg",
+    "ownerId": "trade-1787153166755-5zf4o",
+    "name": "Screenshot 2023-02-28 at 23.56.59.png",
     "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:20:34.337Z",
-    "url": "/api/images/img-blog-1787134803950-mlkju"
-  },
-  {
-    "id": "img-blog-1787134832787-9nwm4",
-    "ownerType": "trade",
-    "ownerId": "blog-demo-1",
-    "name": "img-blog-1787134832787-9nwm4.jpg",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T10:20:34.348Z",
-    "url": "/api/images/img-blog-1787134832787-9nwm4"
+    "createdAt": "2026-08-19T15:26:51.571Z",
+    "url": "/api/images/img-1787153211604-hf3ek"
   }
 ]

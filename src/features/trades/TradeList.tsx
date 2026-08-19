@@ -27,6 +27,7 @@ export const TradeList: React.FC<TradeListProps> = ({
   const [filterSide, setFilterSide] = useState<string>('all');
   const [filterResult, setFilterResult] = useState<string>('all');
   const [filterMarket, setFilterMarket] = useState<string>('all');
+  const [filterTimeframe, setFilterTimeframe] = useState<string>('all');
 
   const filteredTrades = useMemo(() => {
     return trades.filter((t) => {
@@ -34,6 +35,7 @@ export const TradeList: React.FC<TradeListProps> = ({
       const matchSearch =
         !q ||
         t.symbol.toLowerCase().includes(q) ||
+        (t.timeframe && t.timeframe.toLowerCase().includes(q)) ||
         (t.setup && t.setup.toLowerCase().includes(q)) ||
         (t.notes && t.notes.toLowerCase().includes(q)) ||
         (t.emotion && t.emotion.toLowerCase().includes(q));
@@ -46,15 +48,16 @@ export const TradeList: React.FC<TradeListProps> = ({
         (filterResult === 'be' && t.pnl === 0);
 
       const matchMarket = filterMarket === 'all' || t.market === filterMarket;
+      const matchTimeframe = filterTimeframe === 'all' || t.timeframe === filterTimeframe;
 
-      return matchSearch && matchSide && matchResult && matchMarket;
+      return matchSearch && matchSide && matchResult && matchMarket && matchTimeframe;
     });
-  }, [trades, searchTerm, filterSide, filterResult, filterMarket]);
+  }, [trades, searchTerm, filterSide, filterResult, filterMarket, filterTimeframe]);
 
   return (
     <div className="space-y-4">
       {/* Search and Filters Toolbar */}
-      <div className="bg-surface border border-line rounded-xl p-3.5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="bg-surface border border-line rounded-xl p-3.5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
@@ -77,6 +80,26 @@ export const TradeList: React.FC<TradeListProps> = ({
             <option value="all">Tất cả Vị thế (Side)</option>
             <option value="Long">Long (Mua)</option>
             <option value="Short">Short (Bán)</option>
+          </select>
+        </div>
+
+        {/* Filter Timeframe */}
+        <div>
+          <select
+            value={filterTimeframe}
+            onChange={(e) => setFilterTimeframe(e.target.value)}
+            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
+          >
+            <option value="all">Tất cả Timeframe</option>
+            <option value="M1">M1</option>
+            <option value="M5">M5</option>
+            <option value="M15">M15</option>
+            <option value="M30">M30</option>
+            <option value="H1">H1</option>
+            <option value="H4">H4</option>
+            <option value="D1">D1</option>
+            <option value="W1">W1</option>
+            <option value="MN">MN</option>
           </select>
         </div>
 
@@ -121,6 +144,7 @@ export const TradeList: React.FC<TradeListProps> = ({
               <tr className="border-b border-line bg-bg-soft text-[10px] uppercase tracking-wider text-muted font-bold">
                 <th className="py-3 px-4">Thời gian</th>
                 <th className="py-3 px-4">Cặp</th>
+                <th className="py-3 px-4">TF</th>
                 <th className="py-3 px-4">Side</th>
                 <th className="py-3 px-4">Setup</th>
                 <th className="py-3 px-4">Entry / Exit</th>
@@ -136,7 +160,7 @@ export const TradeList: React.FC<TradeListProps> = ({
             <tbody className="divide-y divide-line text-xs">
               {filteredTrades.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-8 text-center text-muted">
+                  <td colSpan={12} className="py-8 text-center text-muted">
                     Không tìm thấy giao dịch nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -157,6 +181,12 @@ export const TradeList: React.FC<TradeListProps> = ({
 
                       <td className="py-3 px-4 font-bold text-text">
                         {trade.symbol}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-surface-3 text-accent border border-line">
+                          {trade.timeframe || 'M15'}
+                        </span>
                       </td>
 
                       <td className="py-3 px-4">

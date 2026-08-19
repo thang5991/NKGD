@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trade, TradeFormData, Side, Market, Emotion, ImageRecord } from '../../types/trade';
+import { Trade, TradeFormData, Side, Market, Emotion, Timeframe, ImageRecord } from '../../types/trade';
 import { PairOption } from '../../types/pair';
 import { calculateTrade, getPipMeta } from '../../utils/calculator';
 import { formatMoney, formatR } from '../../utils/formatters';
@@ -32,6 +32,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   });
 
   const [symbol, setSymbol] = useState(initialTrade?.symbol || 'EURUSD');
+  const [timeframe, setTimeframe] = useState<Timeframe>(initialTrade?.timeframe || 'M15');
   const [side, setSide] = useState<Side>(initialTrade?.side || 'Long');
   const [market, setMarket] = useState<Market>(initialTrade?.market || 'Forex');
   const [setup, setSetup] = useState(initialTrade?.setup || '');
@@ -174,6 +175,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
         id: initialTrade?.id,
         date,
         symbol: symbol.toUpperCase().trim(),
+        timeframe: timeframe || 'M15',
         side,
         market,
         setup,
@@ -201,8 +203,8 @@ export const TradeForm: React.FC<TradeFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} onPaste={handlePaste} className="space-y-4">
-      {/* Basic row: Date, Pair, Side, Market */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Basic row: Date, Pair, Timeframe, Side, Market */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <div>
           <label className="block text-[11px] font-semibold text-muted mb-1">Ngày giờ vào lệnh *</label>
           <input
@@ -236,6 +238,25 @@ export const TradeForm: React.FC<TradeFormProps> = ({
                 {opt.displayName}
               </option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-semibold text-muted mb-1">Timeframe *</label>
+          <select
+            value={timeframe}
+            onChange={(e) => setTimeframe(e.target.value as Timeframe)}
+            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
+          >
+            <option value="M1">M1 (1 phút)</option>
+            <option value="M5">M5 (5 phút)</option>
+            <option value="M15">M15 (15 phút)</option>
+            <option value="M30">M30 (30 phút)</option>
+            <option value="H1">H1 (1 giờ)</option>
+            <option value="H4">H4 (4 giờ)</option>
+            <option value="D1">D1 (1 ngày)</option>
+            <option value="W1">W1 (1 tuần)</option>
+            <option value="MN">MN (1 tháng)</option>
           </select>
         </div>
 
