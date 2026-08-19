@@ -88,14 +88,5 @@
     "mimeType": "image/jpeg",
     "createdAt": "2026-08-19T15:26:51.571Z",
     "url": "/api/images/img-1787153211604-hf3ek"
-  },
-  {
-    "id": "img-1787154494673-u5yj9",
-    "ownerType": "trade",
-    "ownerId": "trade-1787153166755-5zf4o",
-    "name": "c2c4917a1fa289f76b702e0ff16717d0.jpeg",
-    "mimeType": "image/jpeg",
-    "createdAt": "2026-08-19T15:48:14.649Z",
-    "url": "/api/images/img-1787154494673-u5yj9"
   }
 ]

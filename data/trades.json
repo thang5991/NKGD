@@ -192,8 +192,7 @@
     "fee": 0,
     "notes": "Cần phát huy",
     "imageRefs": [
-      "img-1787153211604-hf3ek",
-      "img-1787154494673-u5yj9"
+      "img-1787153211604-hf3ek"
     ],
     "pnl": 200,
     "riskAmount": 100,
@@ -201,6 +200,6 @@
     "plannedRR": 3,
     "result": "win",
     "createdAt": "2026-08-19T15:26:06.755Z",
-    "updatedAt": "2026-08-19T15:48:14.649Z"
+    "updatedAt": "2026-08-19T15:58:16.776Z"
   }
 ]
