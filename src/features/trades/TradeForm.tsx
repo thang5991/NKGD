@@ -7,7 +7,7 @@ import { useToast } from '../../hooks/useToast';
 import { Plus, X, Image as ImageIcon, Sparkles, Layers } from 'lucide-react';
 
 interface TradeFormProps {
-  initialTrade?: Trade | null;
+  initialTrade?: Partial<Trade> | Trade | null;
   pairOptions: PairOption[];
   onOpenPairModal: () => void;
   onSubmit: (data: TradeFormData) => Promise<void>;

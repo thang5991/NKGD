@@ -1,46 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTrades } from '../../hooks/useTrades';
-import { usePairs } from '../../hooks/usePairs';
 import { TradeList } from './TradeList';
-import { TradeForm } from './TradeForm';
-import { TradeDetailModal } from './TradeDetailModal';
-import { Modal } from '../../components/common/Modal';
-import { Trade, TradeFormData } from '../../types/trade';
+import { Trade } from '../../types/trade';
 import { formatMoney, formatPercent, formatR } from '../../utils/formatters';
+
 interface TradesPageProps {
-  isAddOpen: boolean;
-  onCloseAddModal: () => void;
-  onOpenAddModal?: () => void;
-  onOpenPairModal: () => void;
-  selectedTradeForDetail: Trade | null;
+  onOpenAddModal: () => void;
+  onOpenEditModal: (trade: Trade) => void;
   onSelectTradeForDetail: (trade: Trade | null) => void;
 }
 
 export const TradesPage: React.FC<TradesPageProps> = ({
-  isAddOpen,
-  onCloseAddModal,
-  onOpenPairModal,
-  selectedTradeForDetail,
+  onOpenEditModal,
   onSelectTradeForDetail,
 }) => {
-  const { trades, stats, loading, saveTradeWithImages, removeTrade, loadTradeImages } = useTrades();
-  const { pairOptions } = usePairs();
-
-  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
-
-  const handleOpenEdit = (trade: Trade) => {
-    setEditingTrade(trade);
-  };
-
-  const handleCloseEdit = () => {
-    setEditingTrade(null);
-  };
-
-  const handleFormSubmit = async (data: TradeFormData) => {
-    await saveTradeWithImages(data);
-    onCloseAddModal();
-    handleCloseEdit();
-  };
+  const { trades, stats, loading, removeTrade } = useTrades();
 
   if (loading) {
     return (
@@ -99,61 +73,8 @@ export const TradesPage: React.FC<TradesPageProps> = ({
       <TradeList
         trades={trades}
         onSelectTrade={(trade) => onSelectTradeForDetail(trade)}
-        onEditTrade={handleOpenEdit}
+        onEditTrade={onOpenEditModal}
         onDeleteTrade={removeTrade}
-      />
-
-      {/* Add Trade Modal */}
-      <Modal
-        isOpen={isAddOpen}
-        onClose={onCloseAddModal}
-        title="Thêm Giao dịch Mới"
-        subtitle="Ghi nhận lệnh, rủi ro ban đầu và phân tích chart"
-        maxWidth="4xl"
-      >
-        <TradeForm
-          pairOptions={pairOptions}
-          onOpenPairModal={onOpenPairModal}
-          onSubmit={handleFormSubmit}
-          onCancel={onCloseAddModal}
-          loadImages={loadTradeImages}
-        />
-      </Modal>
-
-      {/* Edit Trade Modal */}
-      <Modal
-        isOpen={!!editingTrade}
-        onClose={handleCloseEdit}
-        title={`Chỉnh sửa: ${editingTrade?.symbol || ''}`}
-        subtitle="Cập nhật thông số giá, khối lượng và hình ảnh"
-        maxWidth="4xl"
-      >
-        {editingTrade && (
-          <TradeForm
-            initialTrade={editingTrade}
-            pairOptions={pairOptions}
-            onOpenPairModal={onOpenPairModal}
-            onSubmit={handleFormSubmit}
-            onCancel={handleCloseEdit}
-            loadImages={loadTradeImages}
-          />
-        )}
-      </Modal>
-
-      {/* Trade Detail Modal */}
-      <TradeDetailModal
-        isOpen={!!selectedTradeForDetail}
-        onClose={() => onSelectTradeForDetail(null)}
-        trade={selectedTradeForDetail}
-        onEdit={(trade) => {
-          onSelectTradeForDetail(null);
-          handleOpenEdit(trade);
-        }}
-        onDelete={(id) => {
-          removeTrade(id);
-          onSelectTradeForDetail(null);
-        }}
-        loadImages={loadTradeImages}
       />
     </div>
   );

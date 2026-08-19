@@ -10,25 +10,49 @@ import { CalculatorPage } from './features/calculator/CalculatorPage';
 import { BlogPage } from './features/blog/BlogPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { PairModal } from './features/pairs/PairModal';
+import { Modal } from './components/common/Modal';
+import { TradeForm } from './features/trades/TradeForm';
+import { TradeDetailModal } from './features/trades/TradeDetailModal';
 import { useTrades } from './hooks/useTrades';
 import { useBlog } from './hooks/useBlog';
 import { usePairs } from './hooks/usePairs';
-import { Trade } from './types/trade';
+import { Trade, TradeFormData } from './types/trade';
 
 export const MainLayout: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [isAddTradeOpen, setIsAddTradeOpen] = useState(false);
+  const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
+  const [selectedTradeForDetail, setSelectedTradeForDetail] = useState<Trade | null>(null);
   const [isPairModalOpen, setIsPairModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [selectedTradeForDetail, setSelectedTradeForDetail] = useState<Trade | null>(null);
 
-  const { refreshTrades } = useTrades();
+  // Initial form prefill when using calculated lot
+  const [initialFormTrade, setInitialFormTrade] = useState<Partial<Trade> | null>(null);
+
+  const { refreshTrades, saveTradeWithImages, removeTrade, loadTradeImages } = useTrades();
   const { refreshPosts } = useBlog();
-  const { refreshPairs } = usePairs();
+  const { pairOptions, refreshPairs } = usePairs();
   const { showToast } = useToast();
 
   const handleRefreshAll = async () => {
     await Promise.all([refreshTrades(), refreshPosts(), refreshPairs()]);
+  };
+
+  const handleOpenAddTrade = (prefill?: Partial<Trade>) => {
+    setInitialFormTrade(prefill || null);
+    setIsAddTradeOpen(true);
+  };
+
+  const handleCloseAddTrade = () => {
+    setIsAddTradeOpen(false);
+    setInitialFormTrade(null);
+  };
+
+  const handleFormSubmit = async (data: TradeFormData) => {
+    await saveTradeWithImages(data);
+    handleCloseAddTrade();
+    setEditingTrade(null);
+    showToast('Đã lưu giao dịch thành công!', 'success');
   };
 
   const handleUseCalculatedLot = (calcData: {
@@ -38,8 +62,13 @@ export const MainLayout: React.FC = () => {
     entry: number;
     stopLoss: number;
   }) => {
-    setActiveView('trades');
-    setIsAddTradeOpen(true);
+    handleOpenAddTrade({
+      symbol: calcData.symbol,
+      lot: calcData.lot,
+      units: calcData.units,
+      entry: calcData.entry,
+      stopLoss: calcData.stopLoss,
+    });
     showToast(`Đã áp dụng khối lượng ${calcData.lot} lot cho cặp ${calcData.symbol}!`, 'success');
   };
 
@@ -49,7 +78,7 @@ export const MainLayout: React.FC = () => {
       <Sidebar
         activeView={activeView}
         onViewChange={(view) => setActiveView(view)}
-        onOpenAddModal={() => setIsAddTradeOpen(true)}
+        onOpenAddModal={() => handleOpenAddTrade()}
         onOpenPairModal={() => setIsPairModalOpen(true)}
         isOpenMobile={isMobileNavOpen}
         onCloseMobile={() => setIsMobileNavOpen(false)}
@@ -60,7 +89,7 @@ export const MainLayout: React.FC = () => {
         <Header
           activeView={activeView}
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
-          onOpenAddModal={() => setIsAddTradeOpen(true)}
+          onOpenAddModal={() => handleOpenAddTrade()}
           onRefresh={handleRefreshAll}
         />
 
@@ -69,7 +98,7 @@ export const MainLayout: React.FC = () => {
           {activeView === 'dashboard' && (
             <DashboardPage
               onNavigateToTrades={() => setActiveView('trades')}
-              onOpenAddModal={() => setIsAddTradeOpen(true)}
+              onOpenAddModal={() => handleOpenAddTrade()}
               onSelectTrade={(trade) => setSelectedTradeForDetail(trade)}
               onSeedDemo={async () => {
                 await handleRefreshAll();
@@ -85,12 +114,9 @@ export const MainLayout: React.FC = () => {
 
           {activeView === 'trades' && (
             <TradesPage
-              isAddOpen={isAddTradeOpen}
-              onCloseAddModal={() => setIsAddTradeOpen(false)}
-              onOpenAddModal={() => setIsAddTradeOpen(true)}
-              onOpenPairModal={() => setIsPairModalOpen(true)}
-              selectedTradeForDetail={selectedTradeForDetail}
-              onSelectTradeForDetail={setSelectedTradeForDetail}
+              onOpenAddModal={() => handleOpenAddTrade()}
+              onOpenEditModal={(trade) => setEditingTrade(trade)}
+              onSelectTradeForDetail={(trade) => setSelectedTradeForDetail(trade)}
             />
           )}
 
@@ -109,7 +135,62 @@ export const MainLayout: React.FC = () => {
         </div>
       </main>
 
-      {/* Pair Manager Modal */}
+      {/* Global Add Trade Modal (Works from ANY page) */}
+      <Modal
+        isOpen={isAddTradeOpen}
+        onClose={handleCloseAddTrade}
+        title="Thêm Giao dịch Mới"
+        subtitle="Ghi nhận lệnh, rủi ro ban đầu và phân tích chart"
+        maxWidth="4xl"
+      >
+        <TradeForm
+          initialTrade={initialFormTrade || undefined}
+          pairOptions={pairOptions}
+          onOpenPairModal={() => setIsPairModalOpen(true)}
+          onSubmit={handleFormSubmit}
+          onCancel={handleCloseAddTrade}
+          loadImages={loadTradeImages}
+        />
+      </Modal>
+
+      {/* Global Edit Trade Modal (Works from ANY page) */}
+      <Modal
+        isOpen={!!editingTrade}
+        onClose={() => setEditingTrade(null)}
+        title={`Chỉnh sửa: ${editingTrade?.symbol || ''}`}
+        subtitle="Cập nhật thông số giá, khối lượng và hình ảnh"
+        maxWidth="4xl"
+      >
+        {editingTrade && (
+          <TradeForm
+            initialTrade={editingTrade}
+            pairOptions={pairOptions}
+            onOpenPairModal={() => setIsPairModalOpen(true)}
+            onSubmit={handleFormSubmit}
+            onCancel={() => setEditingTrade(null)}
+            loadImages={loadTradeImages}
+          />
+        )}
+      </Modal>
+
+      {/* Global Trade Detail Modal (Works from ANY page) */}
+      <TradeDetailModal
+        isOpen={!!selectedTradeForDetail}
+        onClose={() => setSelectedTradeForDetail(null)}
+        trade={selectedTradeForDetail}
+        onEdit={(trade) => {
+          setSelectedTradeForDetail(null);
+          setEditingTrade(trade);
+        }}
+        onDelete={async (id) => {
+          await removeTrade(id);
+          setSelectedTradeForDetail(null);
+          showToast('Đã xóa giao dịch', 'info');
+        }}
+        loadImages={loadTradeImages}
+      />
+
+      {/* Global Pair Manager Modal */}
       <PairModal
         isOpen={isPairModalOpen}
         onClose={() => setIsPairModalOpen(false)}
