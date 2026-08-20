@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { PairOption } from '../../types/pair';
 import { calculatePositionSize } from '../../utils/calculator';
 import { formatMoney } from '../../utils/formatters';
-import { Calculator, ArrowRight, Layers, Sparkles } from 'lucide-react';
+import { useFxRate } from '../../hooks/useFxRate';
+import { Calculator, ArrowRight, Layers, Sparkles, RefreshCw } from 'lucide-react';
 
 interface PositionSizeCalculatorProps {
   pairOptions: PairOption[];
@@ -27,7 +28,11 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
   const [entry, setEntry] = useState<string>('');
   const [stopLoss, setStopLoss] = useState<string>('');
   const [stopLossPips, setStopLossPips] = useState<string>('');
-  const [conversionRate, setConversionRate] = useState<string>('');
+  const today = useMemo(() => {
+    const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+    return now.toISOString().slice(0, 10);
+  }, []);
+  const fxRate = useFxRate(symbol, today, 'USD');
 
   // Selected pair object
   const selectedPair = useMemo(() => {
@@ -43,11 +48,11 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
       entry: Number(entry) || undefined,
       stopLoss: Number(stopLoss) || undefined,
       stopLossPips: Number(stopLossPips) || undefined,
-      conversionRate: Number(conversionRate) || undefined,
+      conversionRate: fxRate.rate,
       customPipSize: selectedPair?.pipSize,
       customContractSize: selectedPair?.contractSize,
     });
-  }, [balance, riskPercent, symbol, entry, stopLoss, stopLossPips, conversionRate, selectedPair]);
+  }, [balance, riskPercent, symbol, entry, stopLoss, stopLossPips, fxRate.rate, selectedPair]);
 
   // If entry & stopLoss change and user didn't enter pips directly, update pips
   useEffect(() => {
@@ -60,7 +65,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
   }, [entry, stopLoss, selectedPair]);
 
   const handleUseSize = () => {
-    if (onUseCalculatedLot) {
+    if (onUseCalculatedLot && !result.conversionMissing && !fxRate.loading) {
       onUseCalculatedLot({
         symbol,
         lot: result.lot,
@@ -72,14 +77,14 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
   };
 
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-5">
-      <div className="flex items-center justify-between border-b border-line pb-3">
+    <div className="bg-surface border border-line rounded-xl p-4 sm:p-5 shadow-sm space-y-5">
+      <div className="flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-accent-soft text-accent">
             <Calculator className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-text tracking-tight">Tính Lot theo Pip Value (Medio Style)</h3>
+            <h3 className="text-base font-bold text-text tracking-tight">Tính Lot theo Pip Value</h3>
             <p className="text-xs text-muted">
               Quản lý vốn chuẩn xác theo Pip Value thực tế từng cặp Forex, Kim loại và Crypto
             </p>
@@ -89,7 +94,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
         <button
           type="button"
           onClick={onOpenPairModal}
-          className="text-xs text-accent hover:underline flex items-center gap-1 bg-surface-2 px-3 py-1.5 rounded-lg border border-line"
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-accent hover:underline sm:w-auto sm:py-1.5"
         >
           <Layers className="w-3.5 h-3.5" />
           <span>+ Quản lý Cặp</span>
@@ -173,23 +178,32 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
           />
         </div>
 
-        {/* Conversion rate field if needed */}
+        {/* Automatic conversion status */}
         {result.needsConversion && (
-          <div className="col-span-full bg-surface-2/60 p-3.5 rounded-xl border border-line">
-            <label className="block text-[11px] font-semibold text-accent mb-1">
-              Tỷ giá quy đổi: {result.conversionLabel}
-            </label>
-            <input
-              type="number"
-              step="any"
-              value={conversionRate}
-              onChange={(e) => setConversionRate(e.target.value)}
-              placeholder="VD: 1.25"
-              className="w-full sm:w-64 bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
-            />
-            <p className="text-[10px] text-muted mt-1">
-              {symbol}: Cần tỷ giá quy đổi từ đồng tiền định giá ({result.meta.quote}) sang USD để tính chính xác Pip Value.
-            </p>
+          <div className={`col-span-full flex items-center justify-between gap-3 p-3.5 rounded-xl border ${
+            fxRate.error ? 'bg-loss/5 border-loss/40' : 'bg-surface-2/60 border-line'
+          }`}>
+            <div>
+              <span className="block text-[11px] font-semibold text-accent mb-1">
+                Tỷ giá tự động: {fxRate.quoteCurrency} → USD
+              </span>
+              <p className={`text-[10px] ${fxRate.error ? 'text-loss' : 'text-muted'}`}>
+                {fxRate.loading
+                  ? 'Đang lấy tỷ giá mới nhất...'
+                  : fxRate.error
+                    ? `Không thể lấy tỷ giá: ${fxRate.error}`
+                    : `1 ${fxRate.quoteCurrency} = ${fxRate.rate?.toFixed(6)} USD · Frankfurter (${fxRate.rateDate})`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void fxRate.refresh()}
+              disabled={fxRate.loading}
+              className="shrink-0 flex items-center gap-1 rounded border border-line px-2 py-1 text-[10px] text-muted hover:text-text disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3 w-3 ${fxRate.loading ? 'animate-spin' : ''}`} />
+              Thử lại
+            </button>
           </div>
         )}
       </div>
@@ -220,7 +234,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
         <div className="bg-accent-soft/30 p-2.5 rounded-lg border border-accent/30">
           <span className="text-[10px] uppercase font-bold text-accent block">Khối lượng Đề xuất</span>
           <strong className="text-2xl font-mono font-black text-accent block mt-0.5">
-            {result.lot} Lot
+            {fxRate.loading ? '...' : `${result.lot} Lot`}
           </strong>
           <span className="text-[10px] text-muted block mt-0.5">({result.units.toLocaleString()} units)</span>
         </div>
@@ -241,7 +255,8 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
           <button
             type="button"
             onClick={handleUseSize}
-            className="flex items-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all"
+            disabled={fxRate.loading || result.conversionMissing || result.lot <= 0}
+            className="flex w-full items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <Sparkles className="w-4 h-4" />
             <span>Dùng Khối lượng này cho Giao dịch</span>

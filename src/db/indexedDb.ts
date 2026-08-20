@@ -35,7 +35,7 @@ export async function dbGetAll<T>(storeName: StoreName): Promise<T[]> {
     return (Array.isArray(data) ? data : []) as T[];
   } catch (err) {
     console.error(`Error in dbGetAll(${storeName}):`, err);
-    return [];
+    throw err;
   }
 }
 

@@ -17,6 +17,7 @@ export interface ImageRecord {
 export interface Trade {
   id: string;
   date: string; // ISO or YYYY-MM-DDTHH:mm
+  exitDate?: string; // Closing timestamp, used for historical FX conversion
   symbol: string;
   timeframe?: Timeframe;
   side: Side;
@@ -30,6 +31,15 @@ export interface Trade {
   lot: number;
   units: number;
   fee: number;
+  accountCurrency?: string;
+  quoteCurrency?: string;
+  conversionRate?: number;
+  conversionDate?: string;
+  conversionSource?: string;
+  pnlQuote?: number;
+  riskAmountQuote?: number;
+  importSource?: 'mt5' | 'ctrader';
+  externalId?: string;
   notes: string;
   imageRefs: string[]; // List of ImageRecord IDs
   pnl: number;
@@ -47,4 +57,3 @@ export type TradeFormData = Omit<Trade, 'id' | 'pnl' | 'riskAmount' | 'rMultiple
   newImages?: File[];
   existingImages?: ImageRecord[];
 };
-

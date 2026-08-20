@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, createElement, useState, useEffect, useCallback, useContext } from 'react';
+import type { PropsWithChildren } from 'react';
 import { CustomPair, PairOption } from '../types/pair';
 import { getAllCustomPairs, saveCustomPair, deleteCustomPair, getAllPairOptions } from '../db/pairRepository';
 
-export function usePairs() {
+function usePairsStore() {
   const [customPairs, setCustomPairs] = useState<CustomPair[]>([]);
   const [pairOptions, setPairOptions] = useState<PairOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,13 +19,14 @@ export function usePairs() {
       setPairOptions(options);
     } catch (err) {
       console.error('Failed to load pairs:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshPairs();
+    void refreshPairs().catch(() => undefined);
   }, [refreshPairs]);
 
   const addCustomPair = async (pair: Omit<CustomPair, 'id' | 'createdAt'>): Promise<CustomPair> => {
@@ -57,4 +59,21 @@ export function usePairs() {
     removeCustomPair,
     refreshPairs,
   };
+}
+
+type PairsContextValue = ReturnType<typeof usePairsStore>;
+
+const PairsContext = createContext<PairsContextValue | null>(null);
+
+export function PairsProvider({ children }: PropsWithChildren) {
+  const value = usePairsStore();
+  return createElement(PairsContext.Provider, { value }, children);
+}
+
+export function usePairs(): PairsContextValue {
+  const context = useContext(PairsContext);
+  if (!context) {
+    throw new Error('usePairs must be used within PairsProvider');
+  }
+  return context;
 }

@@ -1,113 +1,137 @@
-# Trading Journal Local — Personal Trading OS
+# NKGD — Personal Trading OS
 
-Website **Nhật ký giao dịch chuyên nghiệp (Personal Trading OS)** dành cho trader Forex, Vàng (XAUUSD), Crypto và các thị trường tài chính.
+Ứng dụng nhật ký giao dịch chạy trên máy cá nhân dành cho trader Forex, Vàng, Crypto và các thị trường tài chính khác. NKGD giúp ghi lại giao dịch, tính khối lượng, theo dõi P&L, phân tích hiệu suất và lưu ảnh biểu đồ trong một giao diện dark mode thống nhất.
 
-Giao diện dark mode hiện đại lấy cảm hứng từ Ondo Perps: nền đen charcoal (`#090A09`), chữ trắng ngà (`#F4F5EF`), điểm nhấn xanh lime (`#B8F35A`), viền mảnh và card phẳng cao cấp.
+## Tính năng chính
 
----
+- **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất và equity curve.
+- **Nhật ký giao dịch:** Lưu thời gian mở/đóng lệnh, symbol, timeframe, side, setup, cảm xúc, Entry/SL/TP/Exit, lot, units, phí, ghi chú và nhiều ảnh biểu đồ.
+- **P&L theo đúng đơn vị tiền tệ:** Tự nhận diện đồng tiền định giá và tự động lấy tỷ giá lịch sử để quy đổi về USD; tỷ giá được cache tại máy.
+- **Lot & Position Size Calculator:** Tính lot/units theo số dư, phần trăm rủi ro, khoảng Stop Loss, contract size và tỷ giá quy đổi.
+- **Calendar P&L:** Xem hiệu suất theo từng tháng hoặc lọc một khoảng ngày tùy chọn; có preset 7 ngày, 30 ngày, tháng này và năm nay.
+- **Import lịch sử broker:** Đọc lịch sử lệnh đã đóng từ MetaTrader 5 (`HTML`, `CSV`) và cTrader (`CSV`), xem trước dữ liệu và bỏ qua giao dịch trùng lặp.
+- **Blog / Notes:** Viết nhật ký, phân tích, chiến lược và bài học bằng Markdown; hỗ trợ dán ảnh trực tiếp.
+- **Quản lý symbol:** Có sẵn các cặp phổ biến và hỗ trợ cấu hình symbol, pip size, contract size tùy chỉnh.
+- **Dữ liệu & Sao lưu:** Xuất/nhập toàn bộ dữ liệu bằng JSON, tạo dữ liệu mẫu hoặc xóa dữ liệu sau bước xác nhận.
+- **Lưu trữ local:** Giao dịch, thiết lập và hình ảnh được lưu trực tiếp trong thư mục `data/`, không phụ thuộc cache của trình duyệt.
 
-## 💾 Lưu trữ Dữ liệu Trực tiếp trên Ổ cứng Local (Local Disk Storage)
+## Yêu cầu hệ thống
 
-**Toàn bộ dữ liệu được lưu trực tiếp thành các file trên máy tính của bạn trong thư mục `data/`:**
-- `data/trades.json`: Danh sách tất cả các lệnh giao dịch.
-- `data/blog.json`: Tất cả bài viết, phân tích, chiến lược và nhật ký tâm lý.
-- `data/customPairs.json`: Danh sách các cặp tiền/tài sản tùy chỉnh.
-- `data/settings.json`: Cài đặt số dư, % rủi ro mặc định, cấu hình.
-- `data/images.json`: Metadata quản lý ảnh biểu đồ.
-- `data/uploads/`: Thư mục chứa trực tiếp các file ảnh chụp màn hình biểu đồ đã được tối ưu hóa.
+- [Node.js](https://nodejs.org/) 20 LTS trở lên
+- npm (được cài kèm Node.js)
+- Trình duyệt hiện đại như Chrome, Edge, Firefox hoặc Safari
+- Kết nối Internet khi cần lấy tỷ giá quy đổi mới từ Frankfurter API
 
-> **Ưu điểm vượt trội:**
-> - Không phụ thuộc vào bộ nhớ IndexedDB/Cache của trình duyệt (xóa lịch sử duyệt web hay đổi trình duyệt không bị mất dữ liệu).
-> - Dễ dàng mở file JSON xem/sửa, sao lưu thư mục `data/`, copy sang máy khác hoặc đồng bộ Cloud (Google Drive, Dropbox, Git).
+## Cài đặt
 
----
-
-## 🚀 Công nghệ & Kiến trúc
-
-- **Frontend**: React 18 + Vite + TypeScript + Tailwind CSS
-- **Icons**: Lucide React Icons
-- **Theme**: Ondo Dark Theme cao cấp
-- **Local Backend / Storage Engine**: Node.js REST API Middleware lưu trữ trực tiếp vào filesystem (`data/*.json` & `data/uploads/*.jpg`)
-- **Charts**: Recharts (Equity Curve mượt mà, tooltip chi tiết)
-
----
-
-## ⚡ Hướng dẫn Khởi chạy Ứng dụng
-
-### 1. Cài đặt thư viện
 ```bash
+git clone https://github.com/thang5991/NKGD.git
+cd NKGD
 npm install
 ```
 
-### 2. Chạy môi trường Development (Khuyên dùng)
+## Khởi chạy ứng dụng
+
+### Chế độ phát triển
+
 ```bash
 npm run dev
 ```
-Mở trình duyệt tại: `http://localhost:3000`
 
-### 3. Build & Chạy Server Production Độc lập
+Mở [http://localhost:3000](http://localhost:3000). Vite sẽ phục vụ giao diện và API lưu trữ local trong cùng một tiến trình.
+
+### Chế độ production
+
 ```bash
 npm run build
-npm run server
+npm start
 ```
 
----
+Mặc định ứng dụng chạy tại [http://localhost:3000](http://localhost:3000). Có thể đổi cổng bằng biến môi trường `PORT`:
 
-## 🌟 Các Tính năng Chính
+```bash
+PORT=8080 npm start
+```
 
-### 1. 📊 Dashboard Tổng quan
-- Các chỉ số KPI chính: Tổng P&L, Tổng số lệnh, Win Rate, Số lệnh Thắng/Thua, Hòa vốn (Breakeven), Profit Factor, Average R thực tế.
-- **Equity Curve**: Biểu đồ đường cong vốn tích lũy theo thời gian thực.
-- Thống kê chi tiết Gross Profit, Gross Loss, Best Trade, Worst Trade, Average P&L.
-- Bảng 6 giao dịch gần nhất với Side (Long/Short), Setup, R:R và số lượng ảnh biểu đồ đính kèm.
+Lệnh hữu ích:
 
-### 2. 📅 Calendar P&L
-- Xem hiệu suất giao dịch trực quan theo từng ngày trong tháng.
-- Ngày thắng có màu xanh mint (`#39D98A`), ngày thua có màu đỏ (`#FF665F`), ngày hiện tại được viền nổi bật.
-- Hiển thị P&L, số lệnh và tổng R của từng ngày. Bấm vào bất kỳ ngày nào để xem danh sách lệnh chi tiết của ngày đó.
-- **Tổng kết theo Tuần (Weekly Summary)**: Thẻ tổng kết P&L, số lệnh và Win Rate của từng tuần trong tháng.
-- Nút chuyển tháng trước, tháng sau và quay về tháng hiện tại.
+| Lệnh | Mục đích |
+| --- | --- |
+| `npm run dev` | Chạy môi trường phát triển tại cổng 3000 |
+| `npm run build` | Kiểm tra TypeScript và tạo bản build trong `dist/` |
+| `npm start` | Chạy server production từ bản build |
+| `npm run preview` | Xem trước bản build bằng Vite |
 
-### 3. 📖 Nhật ký Giao dịch (Trade Journal)
-- Nhập đầy đủ thông tin: Ngày giờ, Cặp giao dịch, Side (Long/Short), Thị trường, Setup, Cảm xúc (Bình tĩnh, Kỷ luật, Tự tin, FOMO, Sợ hãi, Tham lam, Mệt mỏi).
-- Giá: Entry, Stop Loss, Take Profit, Exit.
-- Khối lượng: Lot, Units (tự động đồng bộ theo contract size), Phí giao dịch (Fee).
-- **Công thức tính toán chuẩn xác**:
-  - Long: `P&L = (Exit - Entry) * Units - Fee`
-  - Short: `P&L = (Entry - Exit) * Units - Fee`
-  - Risk ban đầu: `Risk = |Entry - SL| * Units`
-  - Bội số R thực tế: `R = P&L / Risk` (Dấu của R luôn luôn cùng dấu với P&L)
-  - Tỷ lệ R:R kế hoạch: `Reward / Risk`
-- Hỗ trợ thêm nhiều ảnh screenshot biểu đồ trước/khi vào/sau khi đóng lệnh. Hỗ trợ Paste trực tiếp (`Ctrl+V` / `Cmd+V`).
-- Bộ lọc tìm kiếm thông minh theo mã cặp, setup, ghi chú, vị thế Long/Short, kết quả Win/Loss/BE và thị trường.
-- Modal xem chi tiết lệnh và phóng to biểu đồ (Lightbox).
+## Bắt đầu sử dụng
 
-### 4. ✍️ Blog / Notes (Module Độc lập)
-- Module riêng biệt hoàn toàn với Trade Notes, lưu trữ tại `data/blog.json`.
-- **Giao diện Tối ưu Đọc & Soạn thảo (Reading vs Edit Mode)**: Mặc định hiển thị bài viết sạch đẹp, trang nhã, không bị rối mắt bởi các ô nhập liệu; chỉ hiện trình soạn thảo khi bấm nút **"Chỉnh sửa"** hoặc **"Viết bài mới"**.
-- **Chèn & Dán ảnh ở bất kỳ đâu trong nội dung**: Hỗ trợ dán trực tiếp (`Ctrl+V`) hoặc bấm nút *"Chèn ảnh"* trên thanh công cụ để tự động chèn thẻ ảnh `![Mô tả](url)` **đúng ngay tại vị trí con trỏ chuột** trong văn bản.
-- **Trình đọc Markdown Chuyên nghiệp (MarkdownRenderer)**: Hỗ trợ Tiêu đề H1/H2/H3, In đậm, In nghiêng, Checklist nhiệm vụ, Danh sách, Trích dẫn, Khối mã code màu, và ảnh biểu đồ nhúng trực tiếp kèm tính năng phóng to Lightbox khi bấm vào.
-- Phân loại bài viết: **Nhật ký (Journal)**, **Phân tích (Analysis)**, **Chiến lược (Strategy)**, **Bài học (Lesson)**, **Blog tự do**.
-- Đếm từ, số ký tự và thời gian đọc ước tính theo thời gian thực.
-- Trạng thái lưu: `Chưa lưu` / `Đã lưu`, thời gian cập nhật lần cuối.
-- Phím tắt lưu bài nhanh: `Ctrl + S` / `Cmd + S`.
-- Khi xóa bài viết, tất cả các file ảnh liên quan sẽ tự động được dọn dẹp sạch sẽ khỏi thư mục `data/uploads/`.
+1. Mở **Nhật ký giao dịch** và chọn **Thêm giao dịch** để nhập lệnh thủ công.
+2. Điền Entry, Stop Loss, Take Profit, Exit và lot/units. Ứng dụng sẽ tính P&L, R:R và R thực tế.
+3. Với cặp có đồng tiền định giá khác USD, giữ kết nối Internet để ứng dụng lấy tỷ giá của ngày giao dịch. Kết quả đã lấy được lưu trong `data/fxRates.json` để tái sử dụng.
+4. Mở **Lịch Hiệu suất P&L** để xem theo tháng hoặc chọn khoảng ngày cần thống kê.
+5. Mở **Dữ liệu & Sao lưu** để xuất file backup định kỳ.
 
-### 5. 🧮 Lot & Position Size Calculator (Medio Style)
-- Tính toán khối lượng vào lệnh chuẩn theo Pip Value thực tế.
-- Đầu vào: Số dư tài khoản ($), % Rủi ro mong muốn, Cặp giao dịch, Stop Loss (Pips hoặc khoảng giá Entry - SL).
-- Đầu ra: Số tiền rủi ro ($), Khoảng cách SL (Pips), Pip Value / Lot ($), Khối lượng đề xuất (Lot & Units).
-- Hỗ trợ tỷ giá quy đổi USD cho các cặp chéo (Cross Pairs) không có USD làm quote currency.
-- Nút **"Dùng Khối lượng này cho Giao dịch"**: Tự động chuyển thông số sang Form tạo lệnh nhanh chóng.
+## Import từ MetaTrader 5 và cTrader
 
-### 6. 🌐 Quản lý Cặp Giao dịch Tùy chỉnh (Custom Pairs)
-- Có sẵn 28 cặp Forex chính từ 8 đồng tiền lớn: USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD cùng với XAUUSD, BTCUSDT, ETHUSDT.
-- Cho phép tạo thêm mã riêng bất kỳ (VD: `US30`, `NAS100`, `SOLUSDT`, `EURSGD`...).
-- Thiết lập tùy chỉnh: Pip Size, Contract Size, Loại tài sản.
-- Lưu trữ trong `data/customPairs.json`, xuất hiện trong toàn bộ dropdown lựa chọn cặp.
+Trong **Dữ liệu & Sao lưu → Nhập Nhật ký từ Nền tảng Giao dịch**:
 
-### 7. 💾 Sao lưu & Khôi phục (Backup / Restore)
-- **Xuất JSON Backup**: Chuyển đổi toàn bộ giao dịch, bài viết blog, cặp tùy chỉnh, cài đặt và ảnh thành 1 file JSON độc lập để chia sẻ hoặc cất giữ.
-- **Nhập JSON Backup**: Khôi phục lại toàn bộ dữ liệu và file ảnh vào thư mục `data/`.
-- **Tạo Dữ liệu Mẫu (Seed Demo)**: Tự động nạp dữ liệu giao dịch và bài viết mẫu.
-- **Xóa toàn bộ dữ liệu**: Xóa sạch dữ liệu an toàn khi muốn bắt đầu lại từ đầu.
+- **MetaTrader 5:** Xuất báo cáo Account History dưới dạng HTML hoặc CSV, sau đó chọn **Import MetaTrader 5**.
+- **cTrader:** Xuất lịch sử giao dịch đã đóng dưới dạng CSV, sau đó chọn **Import cTrader**.
+- Kiểm tra màn hình xem trước trước khi xác nhận. Ứng dụng chỉ nhập lệnh đã đóng, giữ nguyên dữ liệu đang có và bỏ qua các bản ghi trùng ID.
+
+Các trường được ánh xạ gồm thời gian mở/đóng, symbol, Buy/Sell, volume, Entry, Exit, SL, TP, commission, swap, P&L và comment khi file nguồn có cung cấp.
+
+## Dữ liệu được lưu ở đâu?
+
+```text
+data/
+├── trades.json       # Giao dịch
+├── blog.json         # Bài viết và ghi chú
+├── customPairs.json  # Symbol tùy chỉnh
+├── settings.json     # Thiết lập ứng dụng
+├── images.json       # Metadata hình ảnh
+├── fxRates.json      # Cache tỷ giá tự động (tạo khi sử dụng)
+└── uploads/          # Ảnh biểu đồ
+```
+
+Các file trong `data/` là dữ liệu sử dụng thực tế. Hãy xuất backup trong ứng dụng hoặc sao chép cả thư mục này trước khi nâng cấp, di chuyển máy hay xóa dữ liệu.
+
+## Cách tính P&L và rủi ro
+
+Giá trị thô được tính theo đồng tiền định giá của symbol:
+
+```text
+Long P&L  = (Exit - Entry) × Units
+Short P&L = (Entry - Exit) × Units
+Risk      = |Entry - Stop Loss| × Units
+```
+
+Sau đó P&L và Risk được quy đổi sang đồng tiền tài khoản bằng tỷ giá lịch sử, rồi trừ phí giao dịch. `R thực tế = P&L / Risk`.
+
+Với CFD, chỉ số hoặc symbol có contract size đặc thù, hãy kiểm tra cấu hình symbol trong ứng dụng trước khi dùng kết quả để đặt lệnh thực tế.
+
+## Sao lưu và an toàn dữ liệu
+
+- Dữ liệu được lưu trên máy đang chạy server; ứng dụng không cung cấp đồng bộ cloud hoặc đăng nhập nhiều người dùng.
+- Không đưa file `.env`, dữ liệu giao dịch cá nhân hoặc ảnh biểu đồ riêng tư lên repository công khai.
+- Nên dùng chức năng **Xuất JSON Backup** thường xuyên và lưu bản backup ở vị trí khác máy.
+- Chỉ bind server ra mạng nội bộ/Internet khi bạn đã bổ sung cơ chế xác thực và kiểm soát truy cập phù hợp.
+
+## Xử lý lỗi thường gặp
+
+- **Trang báo “Not found”:** Chạy lại `npm run build` trước `npm start`.
+- **Cổng 3000 đang được sử dụng:** Dừng tiến trình cũ hoặc chạy production với cổng khác, ví dụ `PORT=8080 npm start`.
+- **Không lấy được tỷ giá:** Kiểm tra kết nối Internet, sau đó bấm **Thử lại**. Cuối tuần/ngày nghỉ, hệ thống tự tìm tỷ giá gần nhất trong tối đa 7 ngày trước đó.
+- **Import broker không nhận file:** Chắc chắn báo cáo có các cột symbol, side/type, volume và profit; ưu tiên file CSV/HTML nguyên bản do nền tảng xuất ra.
+- **Dữ liệu chưa cập nhật:** Bấm nút làm mới trên thanh tiêu đề và kiểm tra terminal đang chạy ứng dụng có lỗi hay không.
+
+## Công nghệ
+
+- React 18, TypeScript, Vite
+- Tailwind CSS
+- Recharts
+- Node.js REST API và filesystem storage
+- Lucide Icons
+
+## Phạm vi sử dụng
+
+NKGD là công cụ ghi chép và phân tích cá nhân, không phải hệ thống đặt lệnh và không cung cấp lời khuyên đầu tư. Hãy đối chiếu thông số lot, contract size, phí và tỷ giá với broker trước khi giao dịch.

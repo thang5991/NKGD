@@ -16,7 +16,11 @@ import { TradeDetailModal } from './features/trades/TradeDetailModal';
 import { useTrades } from './hooks/useTrades';
 import { useBlog } from './hooks/useBlog';
 import { usePairs } from './hooks/usePairs';
+import { TradesProvider } from './hooks/useTrades';
+import { BlogProvider } from './hooks/useBlog';
+import { PairsProvider } from './hooks/usePairs';
 import { Trade, TradeFormData } from './types/trade';
+import { seedDemoData } from './utils/demoData';
 
 export const MainLayout: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
@@ -25,6 +29,7 @@ export const MainLayout: React.FC = () => {
   const [selectedTradeForDetail, setSelectedTradeForDetail] = useState<Trade | null>(null);
   const [isPairModalOpen, setIsPairModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Initial form prefill when using calculated lot
   const [initialFormTrade, setInitialFormTrade] = useState<Partial<Trade> | null>(null);
@@ -35,7 +40,33 @@ export const MainLayout: React.FC = () => {
   const { showToast } = useToast();
 
   const handleRefreshAll = async () => {
-    await Promise.all([refreshTrades(), refreshPosts(), refreshPairs()]);
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refreshTrades(), refreshPosts(), refreshPairs()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleManualRefresh = async () => {
+    try {
+      await handleRefreshAll();
+      showToast('Dữ liệu đã được làm mới', 'success');
+    } catch (err) {
+      console.error('Failed to refresh application data:', err);
+      showToast('Không thể làm mới dữ liệu. Vui lòng kiểm tra máy chủ.', 'error');
+    }
+  };
+
+  const handleSeedDemo = async () => {
+    try {
+      const result = await seedDemoData();
+      await handleRefreshAll();
+      showToast(`Đã tạo ${result.trades} giao dịch và ${result.blog} bài viết mẫu`, 'success');
+    } catch (err) {
+      console.error('Failed to seed demo data:', err);
+      showToast('Không thể tạo dữ liệu mẫu', 'error');
+    }
   };
 
   const handleOpenAddTrade = (prefill?: Partial<Trade>) => {
@@ -85,12 +116,13 @@ export const MainLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
         <Header
           activeView={activeView}
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
           onOpenAddModal={() => handleOpenAddTrade()}
-          onRefresh={handleRefreshAll}
+          onRefresh={handleManualRefresh}
+          isRefreshing={isRefreshing}
         />
 
         {/* Views */}
@@ -100,9 +132,7 @@ export const MainLayout: React.FC = () => {
               onNavigateToTrades={() => setActiveView('trades')}
               onOpenAddModal={() => handleOpenAddTrade()}
               onSelectTrade={(trade) => setSelectedTradeForDetail(trade)}
-              onSeedDemo={async () => {
-                await handleRefreshAll();
-              }}
+              onSeedDemo={handleSeedDemo}
             />
           )}
 
@@ -205,7 +235,13 @@ export const MainLayout: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <ToastProvider>
-      <MainLayout />
+      <TradesProvider>
+        <BlogProvider>
+          <PairsProvider>
+            <MainLayout />
+          </PairsProvider>
+        </BlogProvider>
+      </TradesProvider>
     </ToastProvider>
   );
 };

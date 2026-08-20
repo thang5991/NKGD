@@ -39,7 +39,50 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="divide-y divide-line/60 sm:hidden">
+        {recent.map((trade) => {
+          const isProfit = trade.pnl > 0;
+          const isLoss = trade.pnl < 0;
+          return (
+            <button
+              key={trade.id}
+              type="button"
+              onClick={() => onSelectTrade(trade)}
+              className="block w-full p-3.5 text-left transition-colors hover:bg-surface-2/60"
+            >
+              <span className="flex items-start justify-between gap-3">
+                <span>
+                  <span className="flex items-center gap-2">
+                    <strong className="font-mono text-sm text-text">{trade.symbol}</strong>
+                    <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold ${
+                      trade.side === 'Long'
+                        ? 'border-profit/25 bg-profit-soft text-profit'
+                        : 'border-loss/25 bg-loss-soft text-loss'
+                    }`}>
+                      {trade.side}
+                    </span>
+                  </span>
+                  <span className="mt-1 block font-mono text-[10px] text-muted">{formatDateTime(trade.date)}</span>
+                </span>
+                <span className="text-right">
+                  <strong className={`block font-mono text-sm ${
+                    isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-muted'
+                  }`}>
+                    {formatMoney(trade.pnl, true)}
+                  </strong>
+                  <span className="mt-1 block font-mono text-[10px] text-muted">{formatR(trade.rMultiple)}</span>
+                </span>
+              </span>
+              <span className="mt-3 flex items-center justify-between border-t border-line/50 pt-2 text-[10px] text-muted">
+                <span className="truncate pr-3">{trade.setup || 'Chưa có setup'}</span>
+                <span>{trade.lot} lot</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
             <tr className="border-b border-line bg-bg-soft/50 text-[10px] uppercase tracking-wider text-muted font-semibold">

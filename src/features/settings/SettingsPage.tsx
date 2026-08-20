@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { exportBackup, importBackup, clearAllDatabase } from '../../utils/exportImport';
 import { seedDemoData } from '../../utils/demoData';
 import { useToast } from '../../hooks/useToast';
+import { BrokerParseResult, BrokerPlatform, importBrokerTrades, parseBrokerStatement } from '../../utils/brokerImport';
+import { Modal } from '../../components/common/Modal';
+import { formatDateTime, formatMoney } from '../../utils/formatters';
 import {
   Download,
   Upload,
@@ -12,6 +15,10 @@ import {
   ShieldCheck,
   FileCode,
   Image as ImageIcon,
+  CandlestickChart,
+  FileSpreadsheet,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 
 interface SettingsPageProps {
@@ -22,6 +29,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
   const { showToast } = useToast();
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mt5InputRef = useRef<HTMLInputElement>(null);
+  const cTraderInputRef = useRef<HTMLInputElement>(null);
+  const [brokerPreview, setBrokerPreview] = useState<BrokerParseResult | null>(null);
 
   const handleExport = async () => {
     try {
@@ -100,6 +110,50 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
     }
   };
 
+  const handleBrokerFile = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    platform: BrokerPlatform
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setBusy(true);
+      const preview = await parseBrokerStatement(file, platform);
+      setBrokerPreview(preview);
+    } catch (error) {
+      console.error(error);
+      showToast(
+        error instanceof Error ? error.message : 'Không thể đọc file lịch sử giao dịch',
+        'error'
+      );
+    } finally {
+      setBusy(false);
+      event.target.value = '';
+    }
+  };
+
+  const confirmBrokerImport = async () => {
+    if (!brokerPreview) return;
+    try {
+      setBusy(true);
+      const result = await importBrokerTrades(brokerPreview);
+      await onRefreshAll();
+      setBrokerPreview(null);
+      showToast(
+        `Đã nhập ${result.imported} giao dịch · Bỏ qua ${result.duplicates} trùng lặp${
+          result.failed ? ` · ${result.failed} lỗi` : ''
+        }`,
+        result.failed > 0 ? 'warn' : 'success'
+      );
+    } catch (error) {
+      console.error(error);
+      showToast('Không thể nhập lịch sử giao dịch', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Storage Architecture Info */}
@@ -171,6 +225,70 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
               <span className="text-[11px] text-muted">→ Các file ảnh chụp biểu đồ (.jpg)</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Broker statement import */}
+      <div className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4">
+        <div className="border-b border-line pb-3">
+          <div className="flex items-center gap-2">
+            <CandlestickChart className="w-4 h-4 text-accent" />
+            <h3 className="text-sm font-bold text-text tracking-tight">Nhập Nhật ký từ Nền tảng Giao dịch</h3>
+          </div>
+          <p className="text-xs text-muted mt-1">
+            Tự động lấy lệnh đã đóng, thời gian, symbol, side, giá, lot, SL/TP, phí và P&L. Dữ liệu hiện có không bị ghi đè.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => mt5InputRef.current?.click()}
+            className="group flex items-center gap-3 rounded-xl border border-line bg-bg-soft p-4 text-left transition-colors hover:border-accent-border hover:bg-surface-2 disabled:opacity-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <FileSpreadsheet className="h-5 w-5" />
+            </span>
+            <span>
+              <strong className="block text-sm text-text">Import MetaTrader 5</strong>
+              <span className="mt-0.5 block text-[11px] text-muted">Báo cáo Account History định dạng HTML hoặc CSV</span>
+            </span>
+          </button>
+          <input
+            ref={mt5InputRef}
+            type="file"
+            accept=".html,.htm,.csv,.txt,text/html,text/csv"
+            onChange={(event) => void handleBrokerFile(event, 'mt5')}
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => cTraderInputRef.current?.click()}
+            className="group flex items-center gap-3 rounded-xl border border-line bg-bg-soft p-4 text-left transition-colors hover:border-accent-border hover:bg-surface-2 disabled:opacity-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <CandlestickChart className="h-5 w-5" />
+            </span>
+            <span>
+              <strong className="block text-sm text-text">Import cTrader</strong>
+              <span className="mt-0.5 block text-[11px] text-muted">Statement hoặc History đã lưu dưới dạng CSV</span>
+            </span>
+          </button>
+          <input
+            ref={cTraderInputRef}
+            type="file"
+            accept=".csv,.txt,text/csv"
+            onChange={(event) => void handleBrokerFile(event, 'ctrader')}
+            className="hidden"
+          />
+        </div>
+
+        <div className="rounded-lg border border-line/60 bg-surface-2/30 px-3.5 py-3 text-[11px] leading-relaxed text-muted">
+          <strong className="text-text">Cách xuất file:</strong> MT5 → History → Report → HTML. cTrader → History → Statement → Save CSV.
+          Chỉ các vị thế đã đóng mới được nhập; lệnh trùng ID sẽ tự động bỏ qua.
         </div>
       </div>
 
@@ -249,6 +367,93 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
           Lưu ý: Thao tác này sẽ làm rỗng các file JSON và xóa toàn bộ file ảnh trong thư mục <code className="font-mono text-text">data/uploads/</code>. Hãy chắc chắn đã xuất file sao lưu trước khi thực hiện.
         </p>
       </div>
+
+      <Modal
+        isOpen={!!brokerPreview}
+        onClose={() => !busy && setBrokerPreview(null)}
+        title={`Xem trước Import ${brokerPreview?.platform === 'mt5' ? 'MetaTrader 5' : 'cTrader'}`}
+        subtitle={brokerPreview?.fileName}
+        maxWidth="4xl"
+      >
+        {brokerPreview && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="rounded-lg border border-line bg-bg-soft p-3">
+                <span className="block text-[10px] uppercase font-bold text-muted">Lệnh hợp lệ</span>
+                <strong className="mt-1 block font-mono text-lg text-accent">{brokerPreview.trades.length}</strong>
+              </div>
+              <div className="rounded-lg border border-line bg-bg-soft p-3">
+                <span className="block text-[10px] uppercase font-bold text-muted">Dòng bỏ qua</span>
+                <strong className="mt-1 block font-mono text-lg text-text">{brokerPreview.skippedRows}</strong>
+              </div>
+              <div className="col-span-2 sm:col-span-1 rounded-lg border border-line bg-bg-soft p-3">
+                <span className="block text-[10px] uppercase font-bold text-muted">P&L từ Broker</span>
+                <strong className="mt-1 block font-mono text-lg text-text">
+                  {formatMoney(brokerPreview.trades.reduce((sum, trade) => sum + trade.pnl, 0), true)}
+                </strong>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border border-line">
+              <div className="max-h-80 overflow-auto">
+                <table className="w-full min-w-[720px] text-left text-xs">
+                  <thead className="sticky top-0 bg-surface-2 text-[10px] uppercase text-muted">
+                    <tr>
+                      <th className="px-3 py-2.5">Thời gian</th>
+                      <th className="px-3 py-2.5">Symbol</th>
+                      <th className="px-3 py-2.5">Side</th>
+                      <th className="px-3 py-2.5 text-right">Lot</th>
+                      <th className="px-3 py-2.5 text-right">Entry</th>
+                      <th className="px-3 py-2.5 text-right">Exit</th>
+                      <th className="px-3 py-2.5 text-right">P&L</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line/60">
+                    {brokerPreview.trades.map((trade, index) => (
+                      <tr key={`${trade.externalId}-${index}`} className="bg-bg-soft/40">
+                        <td className="px-3 py-2.5 font-mono text-[11px] text-muted">{formatDateTime(trade.openTime)}</td>
+                        <td className="px-3 py-2.5 font-bold text-text">{trade.symbol}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`inline-flex items-center gap-1 font-semibold ${trade.side === 'Long' ? 'text-profit' : 'text-loss'}`}>
+                            {trade.side === 'Long' ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                            {trade.side}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-text">{trade.lot}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-muted">{trade.entry}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-muted">{trade.exit}</td>
+                        <td className={`px-3 py-2.5 text-right font-mono font-bold ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                          {formatMoney(trade.pnl, true)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-line pt-4">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setBrokerPreview(null)}
+                className="rounded-lg px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-2 hover:text-text disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void confirmBrokerImport()}
+                className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-xs font-bold text-bg hover:bg-[#c5ff68] disabled:opacity-50"
+              >
+                <Upload className="h-4 w-4" />
+                {busy ? 'Đang import...' : `Import ${brokerPreview.trades.length} giao dịch`}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, createElement, useState, useEffect, useCallback, useContext } from 'react';
+import type { PropsWithChildren } from 'react';
 import { BlogPost, BlogPostFormData } from '../types/blog';
 import { getAllBlogPosts, saveBlogPost, deleteBlogPost, getBlogPostById } from '../db/blogRepository';
 import { getImagesByIds, saveImage, deleteImage, getImageById } from '../db/imageRepository';
 import { compressImageFile } from '../utils/imageCompressor';
 import { ImageRecord } from '../types/trade';
 
-export function useBlog() {
+function useBlogStore() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,13 +17,14 @@ export function useBlog() {
       setPosts(list);
     } catch (err) {
       console.error('Failed to load blog posts:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshPosts();
+    void refreshPosts().catch(() => undefined);
   }, [refreshPosts]);
 
   const savePostWithImages = useCallback(
@@ -138,4 +140,21 @@ export function useBlog() {
     getPost,
     refreshPosts,
   };
+}
+
+type BlogContextValue = ReturnType<typeof useBlogStore>;
+
+const BlogContext = createContext<BlogContextValue | null>(null);
+
+export function BlogProvider({ children }: PropsWithChildren) {
+  const value = useBlogStore();
+  return createElement(BlogContext.Provider, { value }, children);
+}
+
+export function useBlog(): BlogContextValue {
+  const context = useContext(BlogContext);
+  if (!context) {
+    throw new Error('useBlog must be used within BlogProvider');
+  }
+  return context;
 }

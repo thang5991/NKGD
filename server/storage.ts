@@ -51,6 +51,90 @@ function writeStore(storeName: string, data: any): boolean {
   }
 }
 
+interface FxRateRecord {
+  id: string;
+  requestedDate: string;
+  rateDate: string;
+  base: string;
+  quote: string;
+  rate: number;
+  source: 'frankfurter';
+  fetchedAt: string;
+}
+
+function normalizeCurrency(value: string | null): string {
+  const currency = (value || '').toUpperCase().trim();
+  return currency === 'USDT' ? 'USD' : currency;
+}
+
+function previousUtcDate(date: string, daysBack: number): string {
+  const value = new Date(`${date}T00:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() - daysBack);
+  return value.toISOString().slice(0, 10);
+}
+
+async function fetchHistoricalFxRate(base: string, quote: string, requestedDate: string): Promise<FxRateRecord> {
+  const cache = readStore('fxRates');
+  const records: FxRateRecord[] = Array.isArray(cache) ? cache : [];
+  const id = `${requestedDate}-${base}-${quote}`;
+  const cached = records.find((item) => item.id === id);
+  if (cached) return cached;
+
+  if (base === quote) {
+    const identity: FxRateRecord = {
+      id,
+      requestedDate,
+      rateDate: requestedDate,
+      base,
+      quote,
+      rate: 1,
+      source: 'frankfurter',
+      fetchedAt: new Date().toISOString(),
+    };
+    records.push(identity);
+    writeStore('fxRates', records);
+    return identity;
+  }
+
+  let lastError = 'Không tìm thấy tỷ giá';
+  for (let daysBack = 0; daysBack <= 7; daysBack++) {
+    const candidateDate = previousUtcDate(requestedDate, daysBack);
+    const endpoint = new URL(`https://api.frankfurter.dev/v1/${candidateDate}`);
+    endpoint.searchParams.set('base', base);
+    endpoint.searchParams.set('symbols', quote);
+
+    try {
+      const response = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok) {
+        lastError = `Frankfurter HTTP ${response.status}`;
+        continue;
+      }
+
+      const payload = await response.json() as { date?: string; rates?: Record<string, number> };
+      const rate = Number(payload.rates?.[quote]);
+      if (!Number.isFinite(rate) || rate <= 0) continue;
+
+      const record: FxRateRecord = {
+        id,
+        requestedDate,
+        rateDate: payload.date || candidateDate,
+        base,
+        quote,
+        rate,
+        source: 'frankfurter',
+        fetchedAt: new Date().toISOString(),
+      };
+      records.push(record);
+      writeStore('fxRates', records);
+      return record;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  throw new Error(lastError);
+}
+
 export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boolean {
   const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
@@ -64,6 +148,33 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
   if (method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
+    return true;
+  }
+
+  // --- API: Historical FX conversion with local cache ---
+  // Route: /api/fx-rate?base=JPY&quote=USD&date=2026-08-17
+  if (pathname === '/api/fx-rate' && method === 'GET') {
+    const base = normalizeCurrency(url.searchParams.get('base'));
+    const quote = normalizeCurrency(url.searchParams.get('quote'));
+    const requestedDate = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
+
+    if (!/^[A-Z]{3}$/.test(base) || !/^[A-Z]{3}$/.test(quote) || !/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Invalid base, quote, or date' }));
+      return true;
+    }
+
+    void fetchHistoricalFxRate(base, quote, requestedDate)
+      .then((record) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(record));
+      })
+      .catch((error) => {
+        res.statusCode = 502;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+      });
     return true;
   }
 
