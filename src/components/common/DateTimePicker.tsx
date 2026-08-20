@@ -8,6 +8,7 @@ interface DateTimePickerProps {
   onChange: (value: string) => void;
   required?: boolean;
   min?: string;
+  error?: string;
 }
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -58,6 +59,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   onChange,
   required = false,
   min,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(() => parseLocalDateTime(value));
@@ -75,6 +77,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -83,7 +87,10 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       }
     };
     window.addEventListener('keydown', handleEscape, true);
-    return () => window.removeEventListener('keydown', handleEscape, true);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleEscape, true);
+    };
   }, [isOpen]);
 
   const calendarDays = useMemo(() => {
@@ -124,7 +131,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
 
   const picker = isOpen ? (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setIsOpen(false);
       }}
@@ -134,7 +141,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
         aria-modal="true"
         aria-label={label}
         data-datetime-picker-open
-        className="w-full max-w-sm overflow-hidden rounded-2xl border border-line-strong bg-surface shadow-2xl"
+        className="max-h-[96svh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-line-strong bg-surface shadow-2xl sm:rounded-2xl"
       >
         <div className="flex items-start justify-between border-b border-line bg-surface-2/50 px-4 py-3.5">
           <div>
@@ -289,7 +296,9 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       <button
         type="button"
         onClick={openPicker}
-        className="group flex w-full items-center justify-between rounded-lg border border-line bg-[#0c0e0c] px-3 py-2 text-left outline-none transition-colors hover:border-line-strong focus:border-accent"
+        className={`group flex w-full items-center justify-between rounded-lg border bg-[#0c0e0c] px-3 py-2 text-left outline-none transition-colors ${
+          error ? 'border-loss/70 focus:border-loss' : 'border-line hover:border-line-strong focus:border-accent'
+        }`}
       >
         <span className="flex min-w-0 items-center gap-2">
           <CalendarDays className="h-3.5 w-3.5 shrink-0 text-accent" />
@@ -297,6 +306,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
         </span>
         <Clock className="h-3.5 w-3.5 shrink-0 text-muted-2 transition-colors group-hover:text-muted" />
       </button>
+      {error && <p className="mt-1 text-[10px] font-medium text-loss">{error}</p>}
       {typeof document !== 'undefined' && picker ? createPortal(picker, document.body) : null}
     </div>
   );

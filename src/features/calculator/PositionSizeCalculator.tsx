@@ -77,14 +77,14 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
   };
 
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-5">
-      <div className="flex items-center justify-between border-b border-line pb-3">
+    <div className="bg-surface border border-line rounded-xl p-4 sm:p-5 shadow-sm space-y-5">
+      <div className="flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-accent-soft text-accent">
             <Calculator className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-text tracking-tight">Tính Lot theo Pip Value (Medio Style)</h3>
+            <h3 className="text-base font-bold text-text tracking-tight">Tính Lot theo Pip Value</h3>
             <p className="text-xs text-muted">
               Quản lý vốn chuẩn xác theo Pip Value thực tế từng cặp Forex, Kim loại và Crypto
             </p>
@@ -94,7 +94,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
         <button
           type="button"
           onClick={onOpenPairModal}
-          className="text-xs text-accent hover:underline flex items-center gap-1 bg-surface-2 px-3 py-1.5 rounded-lg border border-line"
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-accent hover:underline sm:w-auto sm:py-1.5"
         >
           <Layers className="w-3.5 h-3.5" />
           <span>+ Quản lý Cặp</span>
@@ -256,7 +256,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             type="button"
             onClick={handleUseSize}
             disabled={fxRate.loading || result.conversionMissing || result.lot <= 0}
-            className="flex items-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <Sparkles className="w-4 h-4" />
             <span>Dùng Khối lượng này cho Giao dịch</span>

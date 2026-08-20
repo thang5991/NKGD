@@ -73,7 +73,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     return cells;
   }, [year, month, dailyMap, dateRange]);
 
-  const weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
+  const weekdays = [
+    { short: 'T2', full: 'Thứ 2' },
+    { short: 'T3', full: 'Thứ 3' },
+    { short: 'T4', full: 'Thứ 4' },
+    { short: 'T5', full: 'Thứ 5' },
+    { short: 'T6', full: 'Thứ 6' },
+    { short: 'T7', full: 'Thứ 7' },
+    { short: 'CN', full: 'Chủ Nhật' },
+  ];
 
   return (
     <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-sm">
@@ -82,11 +90,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         {weekdays.map((day, i) => (
           <div
             key={i}
-            className={`py-2.5 text-center text-[10px] uppercase font-bold tracking-wider text-muted ${
+            className={`py-2 text-center text-[9px] uppercase font-bold tracking-wider text-muted sm:py-2.5 sm:text-[10px] ${
               i < 6 ? 'border-r border-line' : ''
             }`}
           >
-            {day}
+            <span className="sm:hidden">{day.short}</span>
+            <span className="hidden sm:inline">{day.full}</span>
           </div>
         ))}
       </div>
@@ -103,7 +112,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <div
               key={idx}
               onClick={() => !cell.isOutside && cell.isInRange && onSelectDate && cell.key && onSelectDate(cell.key)}
-              className={`min-h-[110px] md:min-h-[120px] p-2 flex flex-col justify-between transition-colors relative ${
+              className={`relative flex min-h-[76px] min-w-0 flex-col justify-between overflow-hidden p-1 transition-colors sm:min-h-[110px] sm:p-2 md:min-h-[120px] ${
                 cell.isOutside ? 'opacity-30 bg-[#0a0c0a]' : 'bg-[#0d0f0d] hover:bg-[#131713]'
               } ${cell.isToday ? 'ring-1 ring-inset ring-accent/60' : ''} ${
                 !cell.isOutside && !cell.isInRange ? 'opacity-35 bg-[#090b09]' : ''
@@ -118,7 +127,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               {/* Day Number and badges */}
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-xs font-semibold w-5 h-5 flex items-center justify-center rounded ${
+                  className={`flex h-4 w-4 items-center justify-center rounded text-[10px] font-semibold sm:h-5 sm:w-5 sm:text-xs ${
                     cell.isToday
                       ? 'bg-accent text-bg font-bold'
                       : cell.isOutside
@@ -130,24 +139,25 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 </span>
 
                 {hasTrades && (
-                  <span className="text-[10px] text-muted font-medium">
-                    {cell.data?.count} {cell.data?.count === 1 ? 'lệnh' : 'lệnh'}
+                  <span className="truncate text-[8px] font-medium text-muted sm:text-[10px]">
+                    <span className="sm:hidden">{cell.data?.count}L</span>
+                    <span className="hidden sm:inline">{cell.data?.count} lệnh</span>
                   </span>
                 )}
               </div>
 
               {/* Day Performance */}
               {hasTrades ? (
-                <div className="mt-2 space-y-1">
+                <div className="mt-1 min-w-0 space-y-1 sm:mt-2">
                   <div
-                    className={`font-mono font-bold text-sm md:text-base tracking-tight ${
+                    className={`truncate font-mono text-[9px] font-bold tracking-tight sm:text-sm md:text-base ${
                       isWin ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
                     }`}
                   >
                     {formatMoney(pnl, true)}
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] text-muted-2 font-mono">
+                  <div className="hidden items-center justify-between font-mono text-[10px] text-muted-2 sm:flex">
                     <span>R:</span>
                     <span className={cell.data!.rTotal >= 0 ? 'text-profit font-medium' : 'text-loss font-medium'}>
                       {formatR(cell.data!.rTotal)}

@@ -116,7 +116,7 @@ export const MainLayout: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
         <Header
           activeView={activeView}
           onOpenMobileNav={() => setIsMobileNavOpen(true)}

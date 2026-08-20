@@ -55,6 +55,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<{ id: string; url: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'date' | 'exitDate' | 'symbol' | 'entry' | 'exit', string>>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fxRate = useFxRate(symbol, exitDate || date, 'USD');
@@ -166,16 +167,18 @@ export const TradeForm: React.FC<TradeFormProps> = ({
     const numEntry = Number(entry);
     const numExit = Number(exit);
 
-    if (isNaN(numEntry) || numEntry <= 0) {
-      showToast('Vui lòng nhập giá Entry hợp lệ', 'error');
-      return;
+    const nextErrors: typeof fieldErrors = {};
+    if (!date) nextErrors.date = 'Vui lòng chọn ngày giờ vào lệnh';
+    if (!exitDate) nextErrors.exitDate = 'Vui lòng chọn ngày giờ đóng lệnh';
+    if (!symbol.trim()) nextErrors.symbol = 'Vui lòng chọn cặp giao dịch';
+    if (!Number.isFinite(numEntry) || numEntry <= 0) nextErrors.entry = 'Giá Entry phải lớn hơn 0';
+    if (!Number.isFinite(numExit) || numExit <= 0) nextErrors.exit = 'Giá Exit phải lớn hơn 0';
+    if (date && exitDate && exitDate < date) {
+      nextErrors.exitDate = 'Thời gian đóng lệnh không được trước thời gian vào lệnh';
     }
-    if (isNaN(numExit) || numExit <= 0) {
-      showToast('Vui lòng nhập giá Exit hợp lệ', 'error');
-      return;
-    }
-    if (exitDate < date) {
-      showToast('Ngày giờ đóng lệnh không được trước ngày giờ vào lệnh', 'error');
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      showToast('Vui lòng kiểm tra lại các trường được đánh dấu', 'error');
       return;
     }
     if (fxRate.loading) {
@@ -228,22 +231,30 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} onPaste={handlePaste} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit} onPaste={handlePaste} className="space-y-4">
       {/* Basic row: Dates, Pair, Timeframe, Side, Market */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <DateTimePicker
           label="Ngày giờ vào lệnh"
           value={date}
-          onChange={setDate}
+          onChange={(value) => {
+            setDate(value);
+            setFieldErrors((current) => ({ ...current, date: undefined }));
+          }}
           required
+          error={fieldErrors.date}
         />
 
         <DateTimePicker
           label="Ngày giờ đóng lệnh"
           value={exitDate}
-          onChange={setExitDate}
+          onChange={(value) => {
+            setExitDate(value);
+            setFieldErrors((current) => ({ ...current, exitDate: undefined }));
+          }}
           min={date}
           required
+          error={fieldErrors.exitDate}
         />
 
         <div>
@@ -259,9 +270,14 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           </div>
           <select
             value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
+            onChange={(e) => {
+              setSymbol(e.target.value);
+              setFieldErrors((current) => ({ ...current, symbol: undefined }));
+            }}
             required
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text outline-none ${
+              fieldErrors.symbol ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+            }`}
           >
             {pairOptions.map((opt) => (
               <option key={opt.symbol} value={opt.symbol}>
@@ -269,6 +285,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               </option>
             ))}
           </select>
+          {fieldErrors.symbol && <p className="mt-1 text-[10px] font-medium text-loss">{fieldErrors.symbol}</p>}
         </div>
 
         <div>
@@ -382,11 +399,17 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             type="number"
             step="any"
             value={entry}
-            onChange={(e) => setEntry(e.target.value)}
+            onChange={(e) => {
+              setEntry(e.target.value);
+              setFieldErrors((current) => ({ ...current, entry: undefined }));
+            }}
             required
             placeholder="1.0850"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+              fieldErrors.entry ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+            }`}
           />
+          {fieldErrors.entry && <p className="mt-1 text-[10px] font-medium text-loss">{fieldErrors.entry}</p>}
         </div>
 
         <div>
@@ -419,11 +442,17 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             type="number"
             step="any"
             value={exit}
-            onChange={(e) => setExit(e.target.value)}
+            onChange={(e) => {
+              setExit(e.target.value);
+              setFieldErrors((current) => ({ ...current, exit: undefined }));
+            }}
             required
             placeholder="1.0910"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+              fieldErrors.exit ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+            }`}
           />
+          {fieldErrors.exit && <p className="mt-1 text-[10px] font-medium text-loss">{fieldErrors.exit}</p>}
         </div>
       </div>
 
@@ -472,7 +501,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
       </div>
 
       {/* Live Preview Card */}
-      <div className="grid grid-cols-3 gap-3 p-3.5 rounded-xl bg-[#0e110e] border border-line-strong">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-line-strong bg-[#0e110e] p-3.5 sm:grid-cols-3">
         <div>
           <span className="text-[10px] uppercase font-bold text-muted block">P&L Dự tính</span>
           <strong
@@ -517,8 +546,8 @@ export const TradeForm: React.FC<TradeFormProps> = ({
 
       {/* Images Upload Section */}
       <div className="space-y-2 border-t border-line pt-3">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <label className="text-[11px] font-semibold text-text block">Hình ảnh / Screenshot Chart</label>
             <span className="text-[10px] text-muted">
               Có thể chọn nhiều ảnh hoặc Paste (Ctrl+V) trực tiếp. Tự động nén và lưu dạng Blob.
@@ -528,7 +557,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-2 hover:bg-surface-3 border border-line text-text transition-colors"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs font-semibold text-text transition-colors hover:bg-surface-3 sm:w-auto sm:py-1.5"
           >
             <Plus className="w-3.5 h-3.5" /> Thêm ảnh
           </button>
@@ -586,11 +615,11 @@ export const TradeForm: React.FC<TradeFormProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
+      <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-xs font-semibold text-muted hover:text-text rounded-lg hover:bg-surface-2 transition-colors"
+          className="w-full rounded-lg px-4 py-2.5 text-xs font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-text sm:w-auto sm:py-2"
         >
           Hủy bỏ
         </button>
@@ -598,7 +627,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
         <button
           type="submit"
           disabled={saving || fxRate.loading || (fxRate.needsConversion && !fxRate.rate)}
-          className="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-accent hover:bg-[#c5ff68] text-bg rounded-lg shadow-sm transition-all disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-bg shadow-sm transition-all hover:bg-[#c5ff68] disabled:opacity-50 sm:w-auto sm:py-2"
         >
           <Sparkles className="w-4 h-4" />
           <span>{saving ? 'Đang lưu...' : initialTrade ? 'Cập nhật giao dịch' : 'Lưu giao dịch'}</span>

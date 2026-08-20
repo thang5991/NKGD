@@ -138,7 +138,97 @@ export const TradeList: React.FC<TradeListProps> = ({
 
       {/* Table Container */}
       <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-line/60 sm:hidden">
+          {filteredTrades.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-muted">
+              Không tìm thấy giao dịch nào phù hợp với bộ lọc.
+            </div>
+          ) : (
+            filteredTrades.map((trade) => {
+              const isProfit = trade.pnl > 0;
+              const isLoss = trade.pnl < 0;
+              return (
+                <article
+                  key={trade.id}
+                  onClick={() => onSelectTrade(trade)}
+                  className="cursor-pointer p-3.5 transition-colors hover:bg-surface-2/70"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <strong className="font-mono text-sm text-text">{trade.symbol}</strong>
+                        <span className="rounded border border-line bg-surface-3 px-1.5 py-0.5 font-mono text-[9px] font-bold text-accent">
+                          {trade.timeframe || 'M15'}
+                        </span>
+                        <span className={`rounded border px-1.5 py-0.5 text-[9px] font-bold ${
+                          trade.side === 'Long'
+                            ? 'border-profit/25 bg-profit-soft text-profit'
+                            : 'border-loss/25 bg-loss-soft text-loss'
+                        }`}>
+                          {trade.side}
+                        </span>
+                      </div>
+                      <p className="mt-1 font-mono text-[10px] text-muted">{formatDateTime(trade.date)}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <strong className={`block font-mono text-sm ${
+                        isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
+                      }`}>
+                        {formatMoney(trade.pnl, true)}
+                      </strong>
+                      <span className={`mt-1 block font-mono text-[10px] ${
+                        trade.rMultiple > 0 ? 'text-profit' : trade.rMultiple < 0 ? 'text-loss' : 'text-muted'
+                      }`}>
+                        {formatR(trade.rMultiple)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg border border-line/60 bg-bg-soft p-2.5 text-[10px]">
+                    <div>
+                      <span className="block text-muted-2">Entry → Exit</span>
+                      <strong className="mt-0.5 block truncate font-mono text-text">{trade.entry} → {trade.exit}</strong>
+                    </div>
+                    <div>
+                      <span className="block text-muted-2">Khối lượng</span>
+                      <strong className="mt-0.5 block font-mono text-text">
+                        {trade.lot > 0 ? `${trade.lot} lot` : `${trade.units} units`}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-[10px] text-muted">{trade.setup || 'Chưa có setup'}</span>
+                    <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => onEditTrade(trade)}
+                        className="rounded-lg border border-line p-2 text-muted transition-colors hover:bg-surface-3 hover:text-text"
+                        aria-label={`Chỉnh sửa ${trade.symbol}`}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Xóa giao dịch ${trade.symbol} (${formatDateTime(trade.date)})?`)) {
+                            onDeleteTrade(trade.id);
+                          }
+                        }}
+                        className="rounded-lg border border-line p-2 text-muted transition-colors hover:bg-surface-3 hover:text-loss"
+                        aria-label={`Xóa ${trade.symbol}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left border-collapse min-w-[850px]">
             <thead>
               <tr className="border-b border-line bg-bg-soft text-[10px] uppercase tracking-wider text-muted font-bold">

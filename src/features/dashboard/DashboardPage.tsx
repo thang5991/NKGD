@@ -104,17 +104,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <p className="text-xs text-muted max-w-md mx-auto mb-4 leading-relaxed">
             Hệ thống hỗ trợ tính Lot chuẩn theo Pip Value, ghi lại biểu đồ chart trước/sau lệnh và phân tích hiệu suất chuyên sâu.
           </p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center sm:gap-3">
             <button
               onClick={onOpenAddModal}
-              className="flex items-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow transition-all"
+              className="flex items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Thêm giao dịch đầu tiên</span>
             </button>
             <button
               onClick={onSeedDemo}
-              className="flex items-center gap-2 bg-surface-3 hover:bg-surface-2 border border-line text-text font-medium py-2.5 px-4 rounded-lg text-xs transition-all"
+              className="flex items-center justify-center gap-2 bg-surface-3 hover:bg-surface-2 border border-line text-text font-medium py-2.5 px-4 rounded-lg text-xs transition-all"
             >
               <Sparkles className="w-3.5 h-3.5 text-accent" />
               <span>Tạo dữ liệu mẫu</span>

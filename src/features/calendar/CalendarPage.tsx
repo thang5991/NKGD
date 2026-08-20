@@ -4,7 +4,7 @@ import { StatCard } from '../../components/common/StatCard';
 import { CalendarGrid } from './CalendarGrid';
 import { WeeklySummary } from './WeeklySummary';
 import { formatMoney, localDateKey, formatDateTime, formatR } from '../../utils/formatters';
-import { useToast } from '../../hooks/useToast';
+import { DateRangePicker } from '../../components/common/DateRangePicker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, DollarSign, Award, ArrowUpRight, ArrowDownRight, X, Filter, RotateCcw } from 'lucide-react';
 import { Trade } from '../../types/trade';
 
@@ -14,15 +14,12 @@ interface CalendarPageProps {
 
 export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => {
   const { trades } = useTrades();
-  const { showToast } = useToast();
   const [currentDate, setCurrentDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
     return d;
   });
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
-  const [draftFrom, setDraftFrom] = useState('');
-  const [draftTo, setDraftTo] = useState('');
   const [dateRange, setDateRange] = useState<{ from: string; to: string } | null>(null);
 
   const changeMonth = (offset: number) => {
@@ -105,23 +102,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
     return rangeTrades.filter((t) => localDateKey(t.date) === selectedDayKey);
   }, [rangeTrades, selectedDayKey]);
 
-  const applyDateFilter = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!draftFrom || !draftTo) {
-      showToast('Vui lòng chọn đủ ngày bắt đầu và ngày kết thúc', 'warn');
-      return;
-    }
-    if (draftFrom > draftTo) {
-      showToast('Ngày bắt đầu không được sau ngày kết thúc', 'error');
-      return;
-    }
-
-    activateDateRange(draftFrom, draftTo);
-  };
-
   const activateDateRange = (from: string, to: string) => {
-    setDraftFrom(from);
-    setDraftTo(to);
     setDateRange({ from, to });
     const [year, month] = from.split('-').map(Number);
     setCurrentDate(new Date(year, month - 1, 1));
@@ -135,19 +116,28 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
     return `${year}-${month}-${day}`;
   };
 
-  const applyPreset = (preset: '7d' | '30d' | 'month' | 'year') => {
+  const getPresetRange = (preset: '7d' | '30d' | 'month' | 'year') => {
     const to = new Date();
     const from = new Date(to);
     if (preset === '7d') from.setDate(to.getDate() - 6);
     if (preset === '30d') from.setDate(to.getDate() - 29);
     if (preset === 'month') from.setDate(1);
     if (preset === 'year') from.setMonth(0, 1);
-    activateDateRange(dateToKey(from), dateToKey(to));
+    return { from: dateToKey(from), to: dateToKey(to) };
+  };
+
+  const applyPreset = (preset: '7d' | '30d' | 'month' | 'year') => {
+    const range = getPresetRange(preset);
+    activateDateRange(range.from, range.to);
+  };
+
+  const isPresetActive = (preset: '7d' | '30d' | 'month' | 'year') => {
+    if (!dateRange) return false;
+    const range = getPresetRange(preset);
+    return dateRange.from === range.from && dateRange.to === range.to;
   };
 
   const clearDateFilter = () => {
-    setDraftFrom('');
-    setDraftTo('');
     setDateRange(null);
     setSelectedDayKey(null);
   };
@@ -235,8 +225,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
       </div>
 
       {/* Date range filter */}
-      <form
-        onSubmit={applyDateFilter}
+      <section
         className={`rounded-xl border p-4 shadow-sm transition-colors ${
           dateRange ? 'border-accent-border bg-accent-soft/20' : 'border-line bg-surface'
         }`}
@@ -251,7 +240,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                 <h3 className="text-xs font-bold text-text">Khoảng thời gian</h3>
                 {dateRange && <span className="rounded-full bg-accent px-2 py-0.5 text-[9px] font-black uppercase text-bg">Đang lọc</span>}
               </div>
-              <p className="text-[10px] text-muted">Chọn nhanh hoặc nhập khoảng ngày tùy chỉnh</p>
+              <p className="text-[10px] text-muted">Chọn nhanh hoặc mở lịch để chọn khoảng tùy chỉnh</p>
             </div>
           </div>
 
@@ -266,7 +255,11 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                 key={preset}
                 type="button"
                 onClick={() => applyPreset(preset)}
-                className="rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[10px] font-semibold text-muted transition-colors hover:border-line-strong hover:text-text"
+                className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold transition-colors ${
+                  isPresetActive(preset)
+                    ? 'border-accent-border bg-accent-soft text-accent'
+                    : 'border-line bg-surface-2 text-muted hover:border-line-strong hover:text-text'
+                }`}
               >
                 {label}
               </button>
@@ -274,49 +267,24 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
           </div>
         </div>
 
-        <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="block text-[10px] uppercase font-bold text-muted mb-1">Từ ngày</label>
-              <input
-                type="date"
-                value={draftFrom}
-                max={draftTo || undefined}
-                onChange={(event) => setDraftFrom(event.target.value)}
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase font-bold text-muted mb-1">Đến ngày</label>
-              <input
-                type="date"
-                value={draftTo}
-                min={draftFrom || undefined}
-                onChange={(event) => setDraftTo(event.target.value)}
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
-              />
-            </div>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+          <div className="min-w-0 flex-1">
+            <DateRangePicker
+              from={dateRange?.from}
+              to={dateRange?.to}
+              onApply={activateDateRange}
+            />
           </div>
-
-          <div className="flex items-center gap-2">
+          {dateRange && (
             <button
-              type="submit"
-              className="flex flex-1 items-center justify-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold px-4 py-2 rounded-lg text-xs transition-colors lg:flex-none"
+              type="button"
+              onClick={clearDateFilter}
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-2 px-4 py-2 text-xs font-semibold text-muted transition-colors hover:bg-surface-3 hover:text-text"
             >
-              <Filter className="w-3.5 h-3.5" />
-              Áp dụng
+              <RotateCcw className="w-3.5 h-3.5" />
+              Xóa lọc
             </button>
-            {dateRange && (
-              <button
-                type="button"
-                onClick={clearDateFilter}
-                className="flex flex-1 items-center justify-center gap-1.5 border border-line bg-surface-2 hover:bg-surface-3 text-muted hover:text-text px-3 py-2 rounded-lg text-xs transition-colors lg:flex-none"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Xóa lọc
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         {dateRange && (
@@ -335,7 +303,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
             </span>
           </div>
         )}
-      </form>
+      </section>
 
       {/* Period KPI Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

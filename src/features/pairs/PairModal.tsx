@@ -19,6 +19,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
   const [assetType, setAssetType] = useState<AssetType>('forex');
   const [pipSize, setPipSize] = useState('0.0001');
   const [contractSize, setContractSize] = useState('100000');
+  const [errors, setErrors] = useState<Partial<Record<'symbol' | 'pipSize' | 'contractSize', string>>>({});
 
   const handleAssetTypeChange = (type: AssetType) => {
     setAssetType(type);
@@ -41,8 +42,17 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
 
     const cleanSymbol = symbol.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
-    if (!cleanSymbol) {
-      showToast('Vui lòng nhập mã cặp giao dịch (Symbol)', 'error');
+    const nextErrors: typeof errors = {};
+    if (!cleanSymbol) nextErrors.symbol = 'Vui lòng nhập mã cặp giao dịch';
+    if (!Number.isFinite(Number(pipSize)) || Number(pipSize) <= 0) {
+      nextErrors.pipSize = 'Pip Size phải lớn hơn 0';
+    }
+    if (!Number.isFinite(Number(contractSize)) || Number(contractSize) <= 0) {
+      nextErrors.contractSize = 'Contract Size phải lớn hơn 0';
+    }
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      showToast('Vui lòng kiểm tra lại thông tin cặp giao dịch', 'error');
       return;
     }
 
@@ -58,6 +68,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
       showToast(`Đã thêm cặp tùy chỉnh: ${cleanSymbol}`, 'success');
       setSymbol('');
       setDisplayName('');
+      setErrors({});
     } catch (err) {
       console.error(err);
       showToast('Không thể thêm cặp tùy chỉnh', 'error');
@@ -74,7 +85,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
     >
       <div className="space-y-6">
         {/* Create Form */}
-        <form onSubmit={handleCreatePair} className="bg-bg-soft p-4 rounded-xl border border-line space-y-3">
+        <form noValidate onSubmit={handleCreatePair} className="bg-bg-soft p-4 rounded-xl border border-line space-y-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-text mb-1">
             <Plus className="w-4 h-4 text-accent" />
             <span>Tạo Cặp Mới</span>
@@ -86,11 +97,17 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={symbol}
-                onChange={(e) => setSymbol(e.target.value)}
+                onChange={(e) => {
+                  setSymbol(e.target.value);
+                  setErrors((current) => ({ ...current, symbol: undefined }));
+                }}
                 placeholder="VD: US30, NAS100, SOLUSDT, EURSGD"
                 required
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text uppercase font-mono outline-none"
+                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text uppercase font-mono outline-none ${
+                  errors.symbol ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+                }`}
               />
+              {errors.symbol && <p className="mt-1 text-[10px] font-medium normal-case text-loss">{errors.symbol}</p>}
             </div>
 
             <div>
@@ -126,11 +143,17 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 type="number"
                 step="any"
                 value={pipSize}
-                onChange={(e) => setPipSize(e.target.value)}
+                onChange={(e) => {
+                  setPipSize(e.target.value);
+                  setErrors((current) => ({ ...current, pipSize: undefined }));
+                }}
                 placeholder="0.0001"
                 required
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text font-mono outline-none"
+                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+                  errors.pipSize ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+                }`}
               />
+              {errors.pipSize && <p className="mt-1 text-[10px] font-medium normal-case text-loss">{errors.pipSize}</p>}
             </div>
 
             <div>
@@ -139,11 +162,17 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 type="number"
                 step="any"
                 value={contractSize}
-                onChange={(e) => setContractSize(e.target.value)}
+                onChange={(e) => {
+                  setContractSize(e.target.value);
+                  setErrors((current) => ({ ...current, contractSize: undefined }));
+                }}
                 placeholder="100000"
                 required
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text font-mono outline-none"
+                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+                  errors.contractSize ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
+                }`}
               />
+              {errors.contractSize && <p className="mt-1 text-[10px] font-medium normal-case text-loss">{errors.contractSize}</p>}
             </div>
 
             <div className="flex items-end">
@@ -174,10 +203,10 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                   key={pair.id}
                   className="flex items-center justify-between p-2.5 rounded-lg bg-[#0c0e0c] border border-line hover:border-line-strong transition-colors"
                 >
-                  <div>
+                  <div className="min-w-0 pr-2">
                     <span className="font-bold font-mono text-xs text-text mr-2">{pair.symbol}</span>
-                    <span className="text-xs text-muted">{pair.displayName}</span>
-                    <span className="text-[10px] text-muted-2 ml-2">
+                    <span className="break-words text-xs text-muted">{pair.displayName}</span>
+                    <span className="mt-0.5 block text-[10px] text-muted-2 sm:ml-2 sm:mt-0 sm:inline">
                       (Pip: {pair.pipSize}, Contract: {pair.contractSize.toLocaleString()})
                     </span>
                   </div>

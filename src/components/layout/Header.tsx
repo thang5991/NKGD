@@ -54,8 +54,8 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="flex items-center justify-between py-4 mb-6 border-b border-line/60">
-      <div className="flex items-center gap-3">
+    <header className="mb-4 flex items-center justify-between gap-2 border-b border-line/60 py-3 sm:mb-6 sm:gap-3 sm:py-4">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           onClick={onOpenMobileNav}
           className="p-2 md:hidden text-muted hover:text-text rounded-lg hover:bg-surface border border-line"
@@ -64,15 +64,15 @@ export const Header: React.FC<HeaderProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-bold text-text tracking-tight">{current.title}</h1>
+            <h1 className="truncate text-base font-bold tracking-tight text-text sm:text-xl md:text-2xl">{current.title}</h1>
           </div>
           <p className="hidden sm:block text-xs text-muted mt-1">{current.subtitle}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {onRefresh && (
           <button
             type="button"
