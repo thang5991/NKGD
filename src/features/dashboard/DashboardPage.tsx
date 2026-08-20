@@ -4,6 +4,7 @@ import { StatCard } from '../../components/common/StatCard';
 import { EquityCurve } from './EquityCurve';
 import { QuickStats } from './QuickStats';
 import { RecentTrades } from './RecentTrades';
+import { DisciplineAnalytics } from './DisciplineAnalytics';
 import { formatMoney, formatPercent, formatR } from '../../utils/formatters';
 import { DollarSign, Percent, TrendingUp, Target, PlusCircle, Sparkles } from 'lucide-react';
 import { Trade } from '../../types/trade';
@@ -84,6 +85,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <QuickStats stats={stats} />
         </div>
       </div>
+
+      <DisciplineAnalytics trades={trades} />
 
       {/* Recent Trades Section */}
       <div>

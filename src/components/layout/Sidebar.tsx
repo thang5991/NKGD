@@ -2,6 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarClock,
   BookOpen,
   PlusCircle,
   FileText,
@@ -13,6 +14,7 @@ import {
 export type ActiveView =
   | 'dashboard'
   | 'calendar'
+  | 'economic'
   | 'trades'
   | 'add-trade'
   | 'calculator'
@@ -39,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { id: 'dashboard' as ActiveView, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'calendar' as ActiveView, label: 'Calendar P&L', icon: CalendarDays },
+    { id: 'economic' as ActiveView, label: 'Lịch kinh tế', icon: CalendarClock },
     { id: 'trades' as ActiveView, label: 'Nhật ký giao dịch', icon: BookOpen },
     { id: 'blog' as ActiveView, label: 'Blog / Notes', icon: FileText },
     { id: 'calculator' as ActiveView, label: 'Lot Calculator', icon: Calculator },

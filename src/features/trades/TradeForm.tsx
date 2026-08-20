@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trade, TradeFormData, Side, Market, Emotion, Timeframe, ImageRecord } from '../../types/trade';
+import { Trade, TradeFormData, Side, Market, Emotion, Timeframe, ImageRecord, ComplianceRuleId } from '../../types/trade';
 import { PairOption } from '../../types/pair';
 import { calculateTrade, getPipMeta } from '../../utils/calculator';
 import { formatMoney, formatR } from '../../utils/formatters';
 import { useToast } from '../../hooks/useToast';
 import { useFxRate } from '../../hooks/useFxRate';
-import { Plus, X, Image as ImageIcon, Sparkles, Layers, RefreshCw } from 'lucide-react';
+import { Plus, X, Image as ImageIcon, Sparkles, Layers, RefreshCw, ShieldCheck, ShieldAlert, Check } from 'lucide-react';
 import { DateTimePicker } from '../../components/common/DateTimePicker';
+import { calculateComplianceScore, complianceGrade, COMPLIANCE_RULES } from '../../utils/compliance';
 
 interface TradeFormProps {
   initialTrade?: Partial<Trade> | Trade | null;
@@ -50,6 +51,8 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   const [units, setUnits] = useState<string>(initialTrade?.units?.toString() || '');
   const [fee, setFee] = useState<string>(initialTrade?.fee?.toString() || '0');
   const [notes, setNotes] = useState(initialTrade?.notes || '');
+  const [complianceReviewed, setComplianceReviewed] = useState(initialTrade?.complianceReviewed || false);
+  const [violatedRules, setViolatedRules] = useState<ComplianceRuleId[]>(initialTrade?.violatedRules || []);
 
   const [existingImages, setExistingImages] = useState<ImageRecord[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
@@ -59,6 +62,8 @@ export const TradeForm: React.FC<TradeFormProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fxRate = useFxRate(symbol, exitDate || date, 'USD');
+  const complianceScore = React.useMemo(() => calculateComplianceScore(violatedRules), [violatedRules]);
+  const complianceStatus = complianceGrade(complianceScore);
 
   // Load existing images if editing
   useEffect(() => {
@@ -141,6 +146,12 @@ export const TradeForm: React.FC<TradeFormProps> = ({
     setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const toggleViolation = (ruleId: ComplianceRuleId) => {
+    setViolatedRules((current) => current.includes(ruleId)
+      ? current.filter((item) => item !== ruleId)
+      : [...current, ruleId]);
+  };
+
   // Paste image handler (Ctrl+V)
   const handlePaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
@@ -216,6 +227,9 @@ export const TradeForm: React.FC<TradeFormProps> = ({
         conversionSource: fxRate.source || 'frankfurter',
         pnlQuote: preview.pnlQuote,
         riskAmountQuote: preview.riskAmountQuote,
+        complianceReviewed,
+        complianceScore: complianceReviewed ? complianceScore : undefined,
+        violatedRules: complianceReviewed ? violatedRules : [],
         notes,
         existingImages,
         newImages: newImageFiles,
@@ -531,6 +545,110 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           </strong>
         </div>
       </div>
+
+      {/* Discipline & compliance review */}
+      <section className={`rounded-xl border transition-colors ${
+        complianceReviewed ? 'border-accent-border bg-accent-soft/15' : 'border-line bg-surface-2/20'
+      }`}>
+        <div className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2.5">
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+              complianceReviewed ? 'bg-accent-soft text-accent' : 'bg-surface-3 text-muted'
+            }`}>
+              <ShieldCheck className="h-4 w-4" />
+            </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-xs font-bold text-text">Chấm điểm mức độ tuân thủ</h3>
+                <span className="rounded-full border border-line px-2 py-0.5 text-[9px] font-semibold text-muted">
+                  Không bắt buộc
+                </span>
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted">
+                Review quy tắc sau giao dịch để đo lường chi phí của việc phá kỷ luật
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={complianceReviewed}
+            onClick={() => setComplianceReviewed((value) => !value)}
+            className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors sm:w-auto ${
+              complianceReviewed
+                ? 'border-accent-border bg-accent-soft text-accent'
+                : 'border-line bg-surface-2 text-muted hover:text-text'
+            }`}
+          >
+            <span>{complianceReviewed ? 'Đã đánh giá' : 'Đánh giá lệnh này'}</span>
+            <span className={`relative h-5 w-9 rounded-full transition-colors ${
+              complianceReviewed ? 'bg-accent' : 'bg-surface-3'
+            }`}>
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                complianceReviewed ? 'translate-x-[18px]' : 'translate-x-0.5'
+              }`} />
+            </span>
+          </button>
+        </div>
+
+        {complianceReviewed && (
+          <div className="border-t border-line/70 p-3.5">
+            <div className="mb-3 flex flex-col gap-3 rounded-xl border border-line bg-bg-soft p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-2">Điểm tuân thủ</span>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <strong className={`font-mono text-2xl font-black ${complianceStatus.className}`}>{complianceScore}</strong>
+                  <span className="text-[10px] text-muted">/ 100 · {complianceStatus.label}</span>
+                </div>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-surface-3 sm:w-48">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    complianceScore === 100 ? 'bg-profit' : complianceScore >= 60 ? 'bg-amber' : 'bg-loss'
+                  }`}
+                  style={{ width: complianceScore + '%' }}
+                />
+              </div>
+            </div>
+
+            <p className="mb-2 text-[10px] text-muted">
+              Mặc định tất cả quy tắc được xem là đã tuân thủ. Chọn những quy tắc bạn đã vi phạm:
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {COMPLIANCE_RULES.map((rule) => {
+                const violated = violatedRules.includes(rule.id);
+                return (
+                  <button
+                    key={rule.id}
+                    type="button"
+                    onClick={() => toggleViolation(rule.id)}
+                    className={`flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors ${
+                      violated
+                        ? 'border-loss/40 bg-loss-soft/60'
+                        : 'border-line bg-surface-2/40 hover:border-line-strong'
+                    }`}
+                  >
+                    <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
+                      violated ? 'bg-loss text-white' : 'bg-profit-soft text-profit'
+                    }`}>
+                      {violated ? <ShieldAlert className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className={`block text-[11px] font-bold ${violated ? 'text-loss' : 'text-text'}`}>
+                        {violated ? rule.violationLabel : rule.label}
+                      </span>
+                      <span className="mt-0.5 block text-[9px] leading-relaxed text-muted">
+                        {rule.description} · {rule.weight} điểm
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Notes / Lessons */}
       <div>

@@ -135,6 +135,197 @@ async function fetchHistoricalFxRate(base: string, quote: string, requestedDate:
   throw new Error(lastError);
 }
 
+interface EconomicEventRecord {
+  id: string;
+  date: string;
+  currency: string;
+  country: string;
+  title: string;
+  category?: string;
+  importance: 1 | 2 | 3;
+  actual?: string;
+  forecast?: string;
+  previous?: string;
+  revised?: string;
+  unit?: string;
+  source: string;
+  sourceUrl?: string;
+}
+
+interface EconomicCacheEntry {
+  events: EconomicEventRecord[];
+  source: string;
+  fetchedAt: string;
+  expiresAt: number;
+}
+
+const economicCache = new Map<string, EconomicCacheEntry>();
+const ECONOMIC_CACHE_TTL = 10 * 60 * 1000;
+
+const COUNTRY_CURRENCIES: Record<string, string> = {
+  'united states': 'USD',
+  'euro area': 'EUR',
+  germany: 'EUR',
+  france: 'EUR',
+  italy: 'EUR',
+  spain: 'EUR',
+  'united kingdom': 'GBP',
+  japan: 'JPY',
+  australia: 'AUD',
+  canada: 'CAD',
+  switzerland: 'CHF',
+  'new zealand': 'NZD',
+  china: 'CNY',
+};
+
+function normalizeEventDate(value: string): string {
+  if (!value) return '';
+  const hasTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  const parsed = new Date(hasTimeZone ? value : value + 'Z');
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString();
+}
+
+function dateKeyInVietnam(value: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(value));
+  const read = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || '';
+  return [read('year'), read('month'), read('day')].join('-');
+}
+
+function countryCurrency(country: string, fallback = ''): string {
+  return fallback.toUpperCase().match(/^[A-Z]{3}$/)?.[0]
+    || COUNTRY_CURRENCIES[country.toLowerCase()]
+    || '';
+}
+
+function importanceNumber(value: unknown): 1 | 2 | 3 {
+  const normalized = String(value || '').toLowerCase();
+  if (normalized === '3' || normalized === 'high') return 3;
+  if (normalized === '2' || normalized === 'medium') return 2;
+  return 1;
+}
+
+async function fetchTradingEconomicsCalendar(
+  from: string,
+  to: string,
+  apiKey: string
+): Promise<EconomicEventRecord[]> {
+  const endpoint = new URL('https://api.tradingeconomics.com/calendar/country/All/' + from + '/' + to);
+  endpoint.searchParams.set('c', apiKey);
+  endpoint.searchParams.set('f', 'json');
+  const response = await fetch(endpoint, { signal: AbortSignal.timeout(12000) });
+  if (!response.ok) throw new Error('Trading Economics HTTP ' + response.status);
+  const payload = await response.json() as Array<Record<string, unknown>>;
+  if (!Array.isArray(payload)) throw new Error('Dữ liệu Trading Economics không hợp lệ');
+
+  return payload.map((item) => {
+    const country = String(item.Country || '');
+    const relativeUrl = String(item.URL || '');
+    return {
+      id: 'te-' + String(item.CalendarId || item.Ticker || Math.random()),
+      date: normalizeEventDate(String(item.Date || '')),
+      currency: countryCurrency(country, String(item.Currency || '')),
+      country,
+      title: String(item.Event || item.Category || 'Sự kiện kinh tế'),
+      category: String(item.Category || ''),
+      importance: importanceNumber(item.Importance),
+      actual: String(item.Actual || ''),
+      forecast: String(item.Forecast || item.TEForecast || ''),
+      previous: String(item.Previous || ''),
+      revised: String(item.Revised || ''),
+      unit: String(item.Unit || ''),
+      source: 'Trading Economics',
+      sourceUrl: relativeUrl ? 'https://tradingeconomics.com' + relativeUrl : undefined,
+    };
+  }).filter((event) => event.date);
+}
+
+async function fetchFairEconomyCalendar(): Promise<EconomicEventRecord[]> {
+  const feeds = ['lastweek', 'thisweek', 'nextweek'];
+  const responses = await Promise.allSettled(
+    feeds.map(async (period) => {
+      const response = await fetch('https://nfs.faireconomy.media/ff_calendar_' + period + '.json', {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error('Fair Economy HTTP ' + response.status);
+      return response.json() as Promise<Array<Record<string, unknown>>>;
+    })
+  );
+
+  const payload = responses.flatMap((result) => result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []);
+  if (payload.length === 0) throw new Error('Không lấy được dữ liệu lịch kinh tế dự phòng');
+
+  const seen = new Set<string>();
+  return payload.map((item) => {
+    const date = normalizeEventDate(String(item.date || ''));
+    const currency = String(item.country || '').toUpperCase();
+    const title = String(item.title || 'Sự kiện kinh tế');
+    const id = ['fe', date, currency, title].join('-');
+    return {
+      id,
+      date,
+      currency,
+      country: currency,
+      title,
+      importance: importanceNumber(item.impact),
+      actual: String(item.actual || ''),
+      forecast: String(item.forecast || ''),
+      previous: String(item.previous || ''),
+      source: 'Fair Economy',
+      sourceUrl: 'https://www.forexfactory.com/calendar',
+    } as EconomicEventRecord;
+  }).filter((event) => {
+    if (!event.date || seen.has(event.id)) return false;
+    seen.add(event.id);
+    return true;
+  });
+}
+
+async function getEconomicCalendar(from: string, to: string, forceRefresh: boolean) {
+  const cacheKey = from + ':' + to;
+  const cached = economicCache.get(cacheKey);
+  if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
+    return { ...cached, cached: true };
+  }
+
+  const apiKey = (process.env.TRADING_ECONOMICS_API_KEY || '').trim();
+  let events: EconomicEventRecord[] = [];
+  let source = 'Fair Economy';
+
+  if (apiKey) {
+    try {
+      events = await fetchTradingEconomicsCalendar(from, to, apiKey);
+      source = 'Trading Economics';
+    } catch (error) {
+      console.warn('Trading Economics failed, using fallback:', error);
+    }
+  }
+
+  if (events.length === 0) {
+    events = await fetchFairEconomyCalendar();
+  }
+
+  events = events
+    .filter((event) => {
+      const dateKey = dateKeyInVietnam(event.date);
+      return dateKey >= from && dateKey <= to;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const entry: EconomicCacheEntry = {
+    events,
+    source,
+    fetchedAt: new Date().toISOString(),
+    expiresAt: Date.now() + ECONOMIC_CACHE_TTL,
+  };
+  economicCache.set(cacheKey, entry);
+  return { ...entry, cached: false };
+}
+
 export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boolean {
   const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
@@ -148,6 +339,39 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
   if (method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
+    return true;
+  }
+
+  // --- API: Economic calendar (Trading Economics + public fallback) ---
+  if (pathname === '/api/economic-calendar' && method === 'GET') {
+    const today = new Date().toISOString().slice(0, 10);
+    const from = url.searchParams.get('from') || today;
+    const to = url.searchParams.get('to') || from;
+    const validDate = /^\d{4}-\d{2}-\d{2}$/;
+    const spanDays = (new Date(to + 'T00:00:00Z').getTime() - new Date(from + 'T00:00:00Z').getTime()) / 86400000;
+
+    if (!validDate.test(from) || !validDate.test(to) || spanDays < 0 || spanDays > 31) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Khoảng ngày không hợp lệ hoặc vượt quá 31 ngày' }));
+      return true;
+    }
+
+    void getEconomicCalendar(from, to, url.searchParams.has('refresh'))
+      .then((result) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+          events: result.events,
+          source: result.source,
+          fetchedAt: result.fetchedAt,
+          cached: result.cached,
+        }));
+      })
+      .catch((error) => {
+        res.statusCode = 502;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+      });
     return true;
   }
 

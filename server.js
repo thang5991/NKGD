@@ -4,6 +4,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { handleApiRequest } from './server/storage.js';
 
+try {
+  process.loadEnvFile?.();
+} catch {
+  // .env is optional; the economic calendar has a public fallback provider.
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DIST_DIR = path.resolve(__dirname, 'dist');

@@ -5,6 +5,7 @@ import { Sidebar, ActiveView } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { CalendarPage } from './features/calendar/CalendarPage';
+import { EconomicCalendarPage } from './features/economic/EconomicCalendarPage';
 import { TradesPage } from './features/trades/TradesPage';
 import { CalculatorPage } from './features/calculator/CalculatorPage';
 import { BlogPage } from './features/blog/BlogPage';
@@ -121,7 +122,7 @@ export const MainLayout: React.FC = () => {
           activeView={activeView}
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
           onOpenAddModal={() => handleOpenAddTrade()}
-          onRefresh={handleManualRefresh}
+          onRefresh={activeView === 'economic' ? undefined : handleManualRefresh}
           isRefreshing={isRefreshing}
         />
 
@@ -141,6 +142,8 @@ export const MainLayout: React.FC = () => {
               onSelectTrade={(trade) => setSelectedTradeForDetail(trade)}
             />
           )}
+
+          {activeView === 'economic' && <EconomicCalendarPage />}
 
           {activeView === 'trades' && (
             <TradesPage
