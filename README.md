@@ -1,14 +1,18 @@
 # NKGD — Personal Trading OS
 
+Phiên bản hiện tại: **v1.2**
+
 Ứng dụng nhật ký giao dịch chạy trên máy cá nhân dành cho trader Forex, Vàng, Crypto và các thị trường tài chính khác. NKGD giúp ghi lại giao dịch, tính khối lượng, theo dõi P&L, phân tích hiệu suất và lưu ảnh biểu đồ trong một giao diện dark mode thống nhất.
 
 ## Tính năng chính
 
-- **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất và equity curve.
+- **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất, equity curve và thống kê kỷ luật giao dịch.
 - **Nhật ký giao dịch:** Lưu thời gian mở/đóng lệnh, symbol, timeframe, side, setup, cảm xúc, Entry/SL/TP/Exit, lot, units, phí, ghi chú và nhiều ảnh biểu đồ.
+- **Chấm điểm tuân thủ:** Review từng lệnh theo 7 quy tắc, tự tính điểm 0–100 và so sánh win rate, P&L đúng kế hoạch, P&L phá kỷ luật, lỗi thường gặp cùng chi phí do lỗi giao dịch.
 - **P&L theo đúng đơn vị tiền tệ:** Tự nhận diện đồng tiền định giá và tự động lấy tỷ giá lịch sử để quy đổi về USD; tỷ giá được cache tại máy.
 - **Lot & Position Size Calculator:** Tính lot/units theo số dư, phần trăm rủi ro, khoảng Stop Loss, contract size và tỷ giá quy đổi.
 - **Calendar P&L:** Xem hiệu suất theo từng tháng hoặc lọc một khoảng ngày tùy chọn; có preset 7 ngày, 30 ngày, tháng này và năm nay.
+- **Economic Calendar:** Nhận diện phiên Á/Âu/Mỹ theo thời gian thực, theo dõi tin kinh tế, mức độ quan trọng, Actual/Forecast/Previous và các thị trường có thể bị tác động.
 - **Import lịch sử broker:** Đọc lịch sử lệnh đã đóng từ MetaTrader 5 (`HTML`, `CSV`) và cTrader (`CSV`), xem trước dữ liệu và bỏ qua giao dịch trùng lặp.
 - **Blog / Notes:** Viết nhật ký, phân tích, chiến lược và bài học bằng Markdown; hỗ trợ dán ảnh trực tiếp.
 - **Quản lý symbol:** Có sẵn các cặp phổ biến và hỗ trợ cấu hình symbol, pip size, contract size tùy chỉnh.
@@ -53,6 +57,20 @@ Mặc định ứng dụng chạy tại [http://localhost:3000](http://localhost
 PORT=8080 npm start
 ```
 
+### Cấu hình Economic Calendar (tùy chọn)
+
+Ứng dụng có nguồn lịch kinh tế dự phòng nên có thể chạy ngay mà không cần API key. Để sử dụng dữ liệu chính thức từ Trading Economics, sao chép file cấu hình mẫu và điền key một lần:
+
+```bash
+cp .env.example .env
+```
+
+```env
+TRADING_ECONOMICS_API_KEY=your_api_key
+```
+
+API key chỉ được đọc ở backend local và không được gửi xuống trình duyệt hoặc commit lên GitHub.
+
 Lệnh hữu ích:
 
 | Lệnh | Mục đích |
@@ -67,8 +85,9 @@ Lệnh hữu ích:
 1. Mở **Nhật ký giao dịch** và chọn **Thêm giao dịch** để nhập lệnh thủ công.
 2. Điền Entry, Stop Loss, Take Profit, Exit và lot/units. Ứng dụng sẽ tính P&L, R:R và R thực tế.
 3. Với cặp có đồng tiền định giá khác USD, giữ kết nối Internet để ứng dụng lấy tỷ giá của ngày giao dịch. Kết quả đã lấy được lưu trong `data/fxRates.json` để tái sử dụng.
-4. Mở **Lịch Hiệu suất P&L** để xem theo tháng hoặc chọn khoảng ngày cần thống kê.
-5. Mở **Dữ liệu & Sao lưu** để xuất file backup định kỳ.
+4. Bật **Đánh giá lệnh này** trong form giao dịch, sau đó chọn các quy tắc đã vi phạm để tạo thống kê kỷ luật trên Dashboard.
+5. Mở **Lịch Hiệu suất P&L** để xem theo tháng hoặc chọn khoảng ngày cần thống kê.
+6. Mở **Dữ liệu & Sao lưu** để xuất file backup định kỳ.
 
 ## Import từ MetaTrader 5 và cTrader
 

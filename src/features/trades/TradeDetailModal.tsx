@@ -11,7 +11,10 @@ import {
   Layers,
   Smile,
   FileText,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
+import { calculateComplianceScore, complianceGrade, COMPLIANCE_RULES } from '../../utils/compliance';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -46,6 +49,10 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
 
   const isProfit = trade.pnl > 0;
   const isLoss = trade.pnl < 0;
+  const complianceScore = Number.isFinite(trade.complianceScore)
+    ? Number(trade.complianceScore)
+    : calculateComplianceScore(trade.violatedRules || []);
+  const complianceStatus = complianceGrade(complianceScore);
 
   return (
     <>
@@ -170,6 +177,55 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Compliance review */}
+          {trade.complianceReviewed ? (
+            <div className="rounded-xl border border-accent-border bg-accent-soft/15 p-3.5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                    <ShieldCheck className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-muted">Điểm tuân thủ</span>
+                    <strong className={`font-mono text-lg ${complianceStatus.className}`}>
+                      {complianceScore}/100 · {complianceStatus.label}
+                    </strong>
+                  </div>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-3 sm:w-44">
+                  <div
+                    className={`h-full rounded-full ${
+                      complianceScore === 100 ? 'bg-profit' : complianceScore >= 60 ? 'bg-amber' : 'bg-loss'
+                    }`}
+                    style={{ width: complianceScore + '%' }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {(trade.violatedRules || []).length === 0 ? (
+                  <span className="rounded-lg border border-profit/25 bg-profit-soft px-2 py-1 text-[10px] font-semibold text-profit">
+                    Không ghi nhận vi phạm
+                  </span>
+                ) : (
+                  COMPLIANCE_RULES
+                    .filter((rule) => (trade.violatedRules || []).includes(rule.id))
+                    .map((rule) => (
+                      <span key={rule.id} className="inline-flex items-center gap-1 rounded-lg border border-loss/25 bg-loss-soft px-2 py-1 text-[10px] text-loss">
+                        <ShieldAlert className="h-3 w-3" />
+                        {rule.violationLabel}
+                      </span>
+                    ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-2/30 px-3 py-2 text-[10px] text-muted">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Lệnh này chưa được đánh giá mức độ tuân thủ.
+            </div>
+          )}
 
           {/* Notes */}
           {trade.notes && (

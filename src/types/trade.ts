@@ -2,6 +2,14 @@ export type Side = 'Long' | 'Short';
 export type Market = 'Forex' | 'Crypto' | 'Stock' | 'Futures' | 'Indices' | 'Commodities' | 'Other';
 export type Emotion = 'Bình tĩnh' | 'Tự tin' | 'FOMO' | 'Sợ hãi' | 'Tham lam' | 'Mệt mỏi' | 'Kỷ luật';
 export type Timeframe = 'M1' | 'M5' | 'M15' | 'M30' | 'H1' | 'H4' | 'D1' | 'W1' | 'MN' | string;
+export type ComplianceRuleId =
+  | 'valid_setup'
+  | 'waited_confirmation'
+  | 'risk_limit'
+  | 'stop_loss_discipline'
+  | 'trade_frequency'
+  | 'emotional_control'
+  | 'exit_plan';
 
 export interface ImageRecord {
   id: string;
@@ -40,6 +48,9 @@ export interface Trade {
   riskAmountQuote?: number;
   importSource?: 'mt5' | 'ctrader';
   externalId?: string;
+  complianceReviewed?: boolean;
+  complianceScore?: number;
+  violatedRules?: ComplianceRuleId[];
   notes: string;
   imageRefs: string[]; // List of ImageRecord IDs
   pnl: number;

@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { handleApiRequest } from './server/storage';
 
+try {
+  process.loadEnvFile?.();
+} catch {
+  // .env is optional; the economic calendar has a public fallback provider.
+}
+
 export default defineConfig({
   plugins: [
     react(),

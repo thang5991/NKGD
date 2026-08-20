@@ -26,6 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
       title: 'Calendar P&L',
       subtitle: 'Xem lợi nhuận/thua lỗ theo ngày, tuần và tháng',
     },
+    economic: {
+      title: 'Economic Calendar',
+      subtitle: 'Theo dõi phiên giao dịch và các sự kiện kinh tế quan trọng',
+    },
     trades: {
       title: 'Nhật ký giao dịch',
       subtitle: 'Lịch sử vào lệnh, tỷ lệ R:R và bài học từng lệnh',
