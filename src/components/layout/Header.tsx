@@ -6,7 +6,8 @@ interface HeaderProps {
   activeView: ActiveView;
   onOpenMobileNav: () => void;
   onOpenAddModal: () => void;
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<void>;
+  isRefreshing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,6 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMobileNav,
   onOpenAddModal,
   onRefresh,
+  isRefreshing = false,
 }) => {
   const viewTitles: Record<ActiveView, { title: string; subtitle: string }> = {
     dashboard: {
@@ -73,11 +75,15 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2">
         {onRefresh && (
           <button
-            onClick={onRefresh}
-            className="p-2 text-muted hover:text-text rounded-lg hover:bg-surface border border-line transition-colors"
-            title="Làm mới dữ liệu"
+            type="button"
+            onClick={() => void onRefresh()}
+            disabled={isRefreshing}
+            className="p-2 text-muted hover:text-text rounded-lg hover:bg-surface border border-line transition-colors disabled:cursor-wait disabled:opacity-60"
+            title={isRefreshing ? 'Đang làm mới dữ liệu' : 'Làm mới dữ liệu'}
+            aria-label={isRefreshing ? 'Đang làm mới dữ liệu' : 'Làm mới dữ liệu'}
+            aria-busy={isRefreshing}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         )}
 

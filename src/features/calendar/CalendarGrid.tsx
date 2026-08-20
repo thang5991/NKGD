@@ -5,12 +5,14 @@ import { formatMoney, formatR, localDateKey } from '../../utils/formatters';
 interface CalendarGridProps {
   currentDate: Date;
   trades: Trade[];
+  dateRange?: { from: string; to: string } | null;
   onSelectDate?: (dateKey: string) => void;
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   trades,
+  dateRange,
   onSelectDate,
 }) => {
   const year = currentDate.getFullYear();
@@ -50,7 +52,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
       const isOutside = cellDate.getMonth() !== month;
       const key = localDateKey(cellDate);
-      const dayData = dailyMap[key];
+      // Adjacent-month cells are visual padding only. Showing their trades made
+      // the grid disagree with the selected month's KPI cards.
+      const dayData = isOutside ? undefined : dailyMap[key];
+      const isInRange = !dateRange || (key >= dateRange.from && key <= dateRange.to);
 
       cells.push({
         date: cellDate,
@@ -58,12 +63,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         key,
         isOutside,
         isToday: key === todayKey,
+        isInRange,
+        isRangeStart: !isOutside && dateRange?.from === key,
+        isRangeEnd: !isOutside && dateRange?.to === key,
         data: dayData,
       });
     }
 
     return cells;
-  }, [year, month, dailyMap]);
+  }, [year, month, dailyMap, dateRange]);
 
   const weekdays = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
 
@@ -94,13 +102,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           return (
             <div
               key={idx}
-              onClick={() => onSelectDate && cell.key && onSelectDate(cell.key)}
+              onClick={() => !cell.isOutside && cell.isInRange && onSelectDate && cell.key && onSelectDate(cell.key)}
               className={`min-h-[110px] md:min-h-[120px] p-2 flex flex-col justify-between transition-colors relative ${
                 cell.isOutside ? 'opacity-30 bg-[#0a0c0a]' : 'bg-[#0d0f0d] hover:bg-[#131713]'
               } ${cell.isToday ? 'ring-1 ring-inset ring-accent/60' : ''} ${
+                !cell.isOutside && !cell.isInRange ? 'opacity-35 bg-[#090b09]' : ''
+              } ${dateRange && !cell.isOutside && cell.isInRange ? 'bg-[#10150d]' : ''} ${
+                cell.isRangeStart || cell.isRangeEnd ? 'ring-1 ring-inset ring-accent bg-accent-soft/20' : ''
+              } ${
                 isWin ? 'bg-gradient-to-br from-profit-soft/40 to-transparent' : ''
               } ${isLoss ? 'bg-gradient-to-br from-loss-soft/40 to-transparent' : ''} ${
-                hasTrades ? 'cursor-pointer' : ''
+                hasTrades && cell.isInRange ? 'cursor-pointer' : ''
               }`}
             >
               {/* Day Number and badges */}

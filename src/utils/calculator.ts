@@ -77,6 +77,8 @@ export interface TradeCalculationInput {
   fee?: number;
   symbol?: string;
   contractSize?: number;
+  accountCurrency?: string;
+  conversionRate?: number;
 }
 
 export interface TradeCalculationOutput {
@@ -87,6 +89,10 @@ export interface TradeCalculationOutput {
   result: 'win' | 'loss' | 'be';
   lot: number;
   units: number;
+  pnlQuote: number;
+  riskAmountQuote: number;
+  conversionRate: number;
+  conversionMissing: boolean;
 }
 
 export function calculateTrade(input: TradeCalculationInput): TradeCalculationOutput {
@@ -98,6 +104,13 @@ export function calculateTrade(input: TradeCalculationInput): TradeCalculationOu
 
   const meta = getPipMeta(input.symbol || '', undefined, input.contractSize);
   const contractSize = input.contractSize || meta.contractSize;
+  const accountCurrency = (input.accountCurrency || 'USD').toUpperCase();
+  const quoteCurrency = meta.quote === 'USDT' ? 'USD' : meta.quote;
+  const normalizedAccountCurrency = accountCurrency === 'USDT' ? 'USD' : accountCurrency;
+  const needsConversion = quoteCurrency !== normalizedAccountCurrency;
+  const suppliedRate = Number(input.conversionRate) || 0;
+  const conversionMissing = needsConversion && suppliedRate <= 0;
+  const conversionRate = needsConversion ? suppliedRate : 1;
 
   let lot = Number(input.lot) || 0;
   let units = Number(input.units) || 0;
@@ -115,14 +128,15 @@ export function calculateTrade(input: TradeCalculationInput): TradeCalculationOu
   // Long: (Exit - Entry) * units - fee
   // Short: (Entry - Exit) * units - fee
   const direction = input.side === 'Long' ? 1 : -1;
-  const grossPnl = (exit - entry) * units * direction;
-  const pnl = grossPnl - fee;
+  const grossPnlQuote = (exit - entry) * units * direction;
+  const pnl = conversionMissing ? 0 : grossPnlQuote * conversionRate - fee;
 
   // Initial Risk math
-  let riskAmount = 0;
+  let riskAmountQuote = 0;
   if (stopLoss !== undefined && stopLoss > 0 && entry > 0) {
-    riskAmount = Math.abs(entry - stopLoss) * units;
+    riskAmountQuote = Math.abs(entry - stopLoss) * units;
   }
+  const riskAmount = conversionMissing ? 0 : riskAmountQuote * conversionRate;
 
   // R multiple calculation
   // Critical rule: R sign must match P&L sign!
@@ -158,6 +172,10 @@ export function calculateTrade(input: TradeCalculationInput): TradeCalculationOu
     result,
     lot: Number(lot.toFixed(4)),
     units: Number(units.toFixed(2)),
+    pnlQuote: Number(grossPnlQuote.toFixed(2)),
+    riskAmountQuote: Number(riskAmountQuote.toFixed(2)),
+    conversionRate,
+    conversionMissing,
   };
 }
 
@@ -183,6 +201,8 @@ export interface PositionSizeOutput {
   meta: PipMeta;
   needsConversion: boolean;
   conversionLabel: string;
+  conversionRate: number;
+  conversionMissing: boolean;
 }
 
 export function calculatePositionSize(input: PositionSizeInput): PositionSizeOutput {
@@ -204,20 +224,18 @@ export function calculatePositionSize(input: PositionSizeInput): PositionSizeOut
   // Conversion rate to Account Currency (assumed USD default)
   const isUSDQuote = meta.quote === 'USD' || meta.quote === 'USDT';
   const isUSDBase = meta.base === 'USD';
-  const needsConversion = !isUSDQuote && !isUSDBase;
+  const needsConversion = !isUSDQuote;
 
-  let quoteToUSD = 1;
+  let quoteToUSD = 0;
   if (isUSDQuote) {
     quoteToUSD = 1;
+  } else if (input.conversionRate && input.conversionRate > 0) {
+    quoteToUSD = input.conversionRate;
   } else if (isUSDBase && entry > 0) {
     // e.g. USDJPY: 1 JPY = 1 / USDJPY USD
     quoteToUSD = 1 / entry;
-  } else if (input.conversionRate && input.conversionRate > 0) {
-    quoteToUSD = input.conversionRate;
-  } else {
-    // Default fallback approximation if no conversion rate supplied
-    quoteToUSD = 1;
   }
+  const conversionMissing = quoteToUSD <= 0;
 
   // Pip Value per Standard Lot in Quote Currency = pipSize * contractSize
   const pipValueQuote = meta.pipSize * meta.contractSize;
@@ -240,5 +258,7 @@ export function calculatePositionSize(input: PositionSizeInput): PositionSizeOut
     meta,
     needsConversion,
     conversionLabel: `1 ${meta.quote} = ? USD`,
+    conversionRate: quoteToUSD,
+    conversionMissing,
   };
 }

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, createElement, useState, useEffect, useCallback, useMemo, useContext } from 'react';
+import type { PropsWithChildren } from 'react';
 import { Trade } from '../types/trade';
 import { getAllTrades, saveTrade, deleteTrade } from '../db/tradeRepository';
 import { getImagesByIds, saveImage, deleteImage } from '../db/imageRepository';
@@ -22,7 +23,7 @@ export interface TradeStats {
   grossLoss: number;
 }
 
-export function useTrades() {
+function useTradesStore() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,13 +34,14 @@ export function useTrades() {
       setTrades(list);
     } catch (err) {
       console.error('Failed to load trades:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refreshTrades();
+    void refreshTrades().catch(() => undefined);
   }, [refreshTrades]);
 
   const saveTradeWithImages = async (
@@ -64,6 +66,8 @@ export function useTrades() {
       units: tradeData.units,
       fee: tradeData.fee,
       symbol: tradeData.symbol,
+      accountCurrency: tradeData.accountCurrency,
+      conversionRate: tradeData.conversionRate,
     });
 
     // Handle Image uploads and preservation
@@ -107,6 +111,7 @@ export function useTrades() {
     const tradeToSave: Trade = {
       id,
       date: tradeData.date,
+      exitDate: tradeData.exitDate || tradeData.date,
       symbol: tradeData.symbol.toUpperCase().trim(),
       timeframe: tradeData.timeframe || 'M15',
       side: tradeData.side,
@@ -120,6 +125,13 @@ export function useTrades() {
       lot: calc.lot,
       units: calc.units,
       fee: tradeData.fee || 0,
+      accountCurrency: tradeData.accountCurrency || 'USD',
+      quoteCurrency: tradeData.quoteCurrency,
+      conversionRate: calc.conversionRate,
+      conversionDate: tradeData.conversionDate,
+      conversionSource: tradeData.conversionSource,
+      pnlQuote: calc.pnlQuote,
+      riskAmountQuote: calc.riskAmountQuote,
       notes: tradeData.notes.trim(),
       imageRefs: finalImageRefs,
       pnl: calc.pnl,
@@ -210,4 +222,21 @@ export function useTrades() {
     refreshTrades,
     loadTradeImages,
   };
+}
+
+type TradesContextValue = ReturnType<typeof useTradesStore>;
+
+const TradesContext = createContext<TradesContextValue | null>(null);
+
+export function TradesProvider({ children }: PropsWithChildren) {
+  const value = useTradesStore();
+  return createElement(TradesContext.Provider, { value }, children);
+}
+
+export function useTrades(): TradesContextValue {
+  const context = useContext(TradesContext);
+  if (!context) {
+    throw new Error('useTrades must be used within TradesProvider');
+  }
+  return context;
 }

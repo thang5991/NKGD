@@ -4,7 +4,9 @@ import { PairOption } from '../../types/pair';
 import { calculateTrade, getPipMeta } from '../../utils/calculator';
 import { formatMoney, formatR } from '../../utils/formatters';
 import { useToast } from '../../hooks/useToast';
-import { Plus, X, Image as ImageIcon, Sparkles, Layers } from 'lucide-react';
+import { useFxRate } from '../../hooks/useFxRate';
+import { Plus, X, Image as ImageIcon, Sparkles, Layers, RefreshCw } from 'lucide-react';
+import { DateTimePicker } from '../../components/common/DateTimePicker';
 
 interface TradeFormProps {
   initialTrade?: Partial<Trade> | Trade | null;
@@ -30,6 +32,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
     const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
     return now.toISOString().slice(0, 16);
   });
+  const [exitDate, setExitDate] = useState(initialTrade?.exitDate || initialTrade?.date || date);
 
   const [symbol, setSymbol] = useState(initialTrade?.symbol || 'EURUSD');
   const [timeframe, setTimeframe] = useState<Timeframe>(initialTrade?.timeframe || 'M15');
@@ -54,6 +57,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   const [saving, setSaving] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fxRate = useFxRate(symbol, exitDate || date, 'USD');
 
   // Load existing images if editing
   useEffect(() => {
@@ -91,8 +95,10 @@ export const TradeForm: React.FC<TradeFormProps> = ({
       units: numUnits,
       fee: numFee,
       symbol,
+      accountCurrency: fxRate.accountCurrency,
+      conversionRate: fxRate.rate,
     });
-  }, [side, entry, exit, stopLoss, takeProfit, lot, units, fee, symbol]);
+  }, [side, entry, exit, stopLoss, takeProfit, lot, units, fee, symbol, fxRate.accountCurrency, fxRate.rate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -168,12 +174,25 @@ export const TradeForm: React.FC<TradeFormProps> = ({
       showToast('Vui lòng nhập giá Exit hợp lệ', 'error');
       return;
     }
+    if (exitDate < date) {
+      showToast('Ngày giờ đóng lệnh không được trước ngày giờ vào lệnh', 'error');
+      return;
+    }
+    if (fxRate.loading) {
+      showToast('Đang lấy tỷ giá quy đổi, vui lòng chờ trong giây lát', 'info');
+      return;
+    }
+    if (fxRate.needsConversion && !fxRate.rate) {
+      showToast('Chưa lấy được tỷ giá quy đổi. Hãy thử tải lại tỷ giá.', 'error');
+      return;
+    }
 
     try {
       setSaving(true);
       await onSubmit({
         id: initialTrade?.id,
         date,
+        exitDate: exitDate || date,
         symbol: symbol.toUpperCase().trim(),
         timeframe: timeframe || 'M15',
         side,
@@ -187,6 +206,13 @@ export const TradeForm: React.FC<TradeFormProps> = ({
         lot: Number(lot) || 1,
         units: Number(units) || 100000,
         fee: Number(fee) || 0,
+        accountCurrency: fxRate.accountCurrency,
+        quoteCurrency: fxRate.quoteCurrency,
+        conversionRate: fxRate.rate || 1,
+        conversionDate: fxRate.rateDate || (exitDate || date).slice(0, 10),
+        conversionSource: fxRate.source || 'frankfurter',
+        pnlQuote: preview.pnlQuote,
+        riskAmountQuote: preview.riskAmountQuote,
         notes,
         existingImages,
         newImages: newImageFiles,
@@ -203,18 +229,22 @@ export const TradeForm: React.FC<TradeFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} onPaste={handlePaste} className="space-y-4">
-      {/* Basic row: Date, Pair, Timeframe, Side, Market */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        <div>
-          <label className="block text-[11px] font-semibold text-muted mb-1">Ngày giờ vào lệnh *</label>
-          <input
-            type="datetime-local"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
-          />
-        </div>
+      {/* Basic row: Dates, Pair, Timeframe, Side, Market */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <DateTimePicker
+          label="Ngày giờ vào lệnh"
+          value={date}
+          onChange={setDate}
+          required
+        />
+
+        <DateTimePicker
+          label="Ngày giờ đóng lệnh"
+          value={exitDate}
+          onChange={setExitDate}
+          min={date}
+          required
+        />
 
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -289,6 +319,29 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           </select>
         </div>
       </div>
+
+      {fxRate.needsConversion && (
+        <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-[11px] ${
+          fxRate.error ? 'border-loss/40 bg-loss/5 text-loss' : 'border-line bg-surface-2/40 text-muted'
+        }`}>
+          <span>
+            {fxRate.loading
+              ? `Đang lấy tỷ giá ${fxRate.quoteCurrency} → ${fxRate.accountCurrency}...`
+              : fxRate.error
+                ? `Không thể lấy tỷ giá: ${fxRate.error}`
+                : `Tự động quy đổi: 1 ${fxRate.quoteCurrency} = ${fxRate.rate?.toFixed(6)} ${fxRate.accountCurrency} (${fxRate.rateDate})`}
+          </span>
+          <button
+            type="button"
+            onClick={() => void fxRate.refresh()}
+            disabled={fxRate.loading}
+            className="shrink-0 flex items-center gap-1 rounded border border-line px-2 py-1 text-muted hover:text-text disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3 w-3 ${fxRate.loading ? 'animate-spin' : ''}`} />
+            Thử lại
+          </button>
+        </div>
+      )}
 
       {/* Setup & Emotion */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -427,7 +480,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               preview.pnl > 0 ? 'text-profit' : preview.pnl < 0 ? 'text-loss' : 'text-text'
             }`}
           >
-            {formatMoney(preview.pnl, true)}
+            {fxRate.loading ? 'Đang tính...' : preview.conversionMissing ? 'Chưa có tỷ giá' : formatMoney(preview.pnl, true)}
           </strong>
         </div>
 
@@ -544,7 +597,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || fxRate.loading || (fxRate.needsConversion && !fxRate.rate)}
           className="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-accent hover:bg-[#c5ff68] text-bg rounded-lg shadow-sm transition-all disabled:opacity-50"
         >
           <Sparkles className="w-4 h-4" />
