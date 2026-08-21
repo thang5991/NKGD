@@ -1,11 +1,13 @@
 # NKGD — Personal Trading OS
 
-Phiên bản hiện tại: **v1.3**
+Phiên bản hiện tại: **v1.3.1**
 
 Ứng dụng nhật ký giao dịch chạy trên máy cá nhân dành cho trader Forex, Vàng, Crypto và các thị trường tài chính khác. NKGD giúp ghi lại giao dịch, tính khối lượng, theo dõi P&L, phân tích hiệu suất và lưu ảnh biểu đồ trong một giao diện dark mode thống nhất.
 
 ## Tính năng chính
 
+- **Đăng nhập local:** Thiết lập mật khẩu ở lần chạy đầu, bảo vệ cả giao diện và API bằng phiên đăng nhập; mật khẩu chỉ được lưu dưới dạng hash có salt.
+- **Market top bar:** Hiển thị liên tục trạng thái phiên Á/Âu/Mỹ và tỷ giá EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, NZD/USD.
 - **Quản lý đa tài khoản:** Tạo nhiều tài khoản Live, Demo hoặc Prop; chuyển nhanh tài khoản đang làm việc và tách riêng toàn bộ giao dịch, Dashboard, Calendar, import broker, số dư cùng mức rủi ro mặc định.
 - **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất, equity curve và thống kê kỷ luật giao dịch.
 - **Nhật ký giao dịch:** Lưu thời gian mở/đóng lệnh, symbol, timeframe, side, setup, cảm xúc, Entry/SL/TP/Exit, lot, units, phí, ghi chú và nhiều ảnh biểu đồ.
@@ -111,6 +113,7 @@ data/
 ├── settings.json     # Thiết lập ứng dụng
 ├── images.json       # Metadata hình ảnh
 ├── fxRates.json      # Cache tỷ giá tự động (tạo khi sử dụng)
+├── auth.json         # Salt/hash mật khẩu local (không nằm trong backup)
 └── uploads/          # Ảnh biểu đồ
 ```
 
@@ -132,6 +135,8 @@ Với CFD, chỉ số hoặc symbol có contract size đặc thù, hãy kiểm t
 
 ## Sao lưu và an toàn dữ liệu
 
+- Mật khẩu được băm bằng `scrypt`; file backup không chứa thông tin xác thực. Có thể đổi mật khẩu trong **Dữ liệu & Cài đặt → Bảo mật đăng nhập**.
+- Nếu quên mật khẩu, dừng server và xóa `data/auth.json`, sau đó mở lại ứng dụng để thiết lập mật khẩu mới. Dữ liệu giao dịch không bị ảnh hưởng.
 - Dữ liệu được lưu trên máy đang chạy server; ứng dụng không cung cấp đồng bộ cloud hoặc đăng nhập nhiều người dùng.
 - Không đưa file `.env`, dữ liệu giao dịch cá nhân hoặc ảnh biểu đồ riêng tư lên repository công khai.
 - Nên dùng chức năng **Xuất JSON Backup** thường xuyên và lưu bản backup ở vị trí khác máy.

@@ -67,3 +67,16 @@ body {
     @apply w-full rounded-lg border border-line bg-bg px-3 py-2 text-xs text-text outline-none focus:border-accent;
   }
 }
+
+@keyframes market-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.market-ticker-track {
+  animation: market-ticker 42s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-ticker-track { animation: none; }
+}
