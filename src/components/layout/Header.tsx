@@ -1,7 +1,8 @@
 import React from 'react';
-import { Menu, Plus, RefreshCw, WalletCards } from 'lucide-react';
+import { LogOut, Menu, Plus, RefreshCw, WalletCards } from 'lucide-react';
 import { ActiveView } from './Sidebar';
 import { useAccounts } from '../../hooks/useAccounts';
+import { useAuth } from '../../hooks/useAuth';
 
 interface HeaderProps {
   activeView: ActiveView;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing = false,
 }) => {
   const { accounts, activeAccount, activeAccountId, setActiveAccountId } = useAccounts();
+  const { logout } = useAuth();
   const viewTitles: Record<ActiveView, { title: string; subtitle: string }> = {
     dashboard: {
       title: 'Dashboard Tổng quan',
@@ -109,6 +111,10 @@ export const Header: React.FC<HeaderProps> = ({
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         )}
+
+        <button type="button" onClick={() => void logout()} className="rounded-lg border border-line p-2 text-muted transition-colors hover:bg-surface hover:text-loss" title="Khóa và đăng xuất" aria-label="Khóa và đăng xuất">
+          <LogOut className="h-4 w-4" />
+        </button>
 
         <button
           onClick={onOpenAddModal}

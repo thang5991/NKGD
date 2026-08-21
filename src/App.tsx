@@ -23,6 +23,8 @@ import { PairsProvider } from './hooks/usePairs';
 import { Trade, TradeFormData } from './types/trade';
 import { seedDemoData } from './utils/demoData';
 import { AccountsProvider, useAccounts } from './hooks/useAccounts';
+import { AuthProvider } from './hooks/useAuth';
+import { MarketTicker } from './components/layout/MarketTicker';
 
 export const MainLayout: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
@@ -120,6 +122,7 @@ export const MainLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <MarketTicker />
         <Header
           activeView={activeView}
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
@@ -239,17 +242,19 @@ export const MainLayout: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <AccountsProvider>
-        <TradesProvider>
-          <BlogProvider>
-            <PairsProvider>
-              <MainLayout />
-            </PairsProvider>
-          </BlogProvider>
-        </TradesProvider>
-      </AccountsProvider>
-    </ToastProvider>
+    <AuthProvider>
+      <ToastProvider>
+        <AccountsProvider>
+          <TradesProvider>
+            <BlogProvider>
+              <PairsProvider>
+                <MainLayout />
+              </PairsProvider>
+            </BlogProvider>
+          </TradesProvider>
+        </AccountsProvider>
+      </ToastProvider>
+    </AuthProvider>
   );
 };
 

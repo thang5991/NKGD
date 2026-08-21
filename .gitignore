@@ -5,4 +5,5 @@ dist
 .env.*
 !.env.example
 data/fxRates.json
+data/auth.json
 server/storage.js

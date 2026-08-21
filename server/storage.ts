@@ -2,11 +2,100 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../data');
 const UPLOADS_DIR = path.resolve(DATA_DIR, 'uploads');
+const AUTH_FILE = path.resolve(DATA_DIR, 'auth.json');
+const AUTH_COOKIE = 'nkgd_session';
+const SESSION_TTL = 12 * 60 * 60 * 1000;
+const sessions = new Map<string, number>();
+const DATA_STORES = new Set(['trades', 'blog', 'images', 'customPairs', 'settings', 'accounts']);
+
+interface AuthRecord {
+  salt: string;
+  hash: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function readAuth(): AuthRecord | null {
+  try {
+    if (!fs.existsSync(AUTH_FILE)) return null;
+    const value = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8')) as AuthRecord;
+    return value?.salt && value?.hash ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function passwordHash(password: string, salt: string): string {
+  return scryptSync(password, salt, 64).toString('hex');
+}
+
+function verifyPassword(password: string, auth: AuthRecord): boolean {
+  const expected = Buffer.from(auth.hash, 'hex');
+  const actual = Buffer.from(passwordHash(password, auth.salt), 'hex');
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+function savePassword(password: string, previous?: AuthRecord | null): void {
+  const salt = randomBytes(16).toString('hex');
+  const now = new Date().toISOString();
+  const auth: AuthRecord = {
+    salt,
+    hash: passwordHash(password, salt),
+    createdAt: previous?.createdAt || now,
+    updatedAt: now,
+  };
+  fs.writeFileSync(AUTH_FILE, JSON.stringify(auth, null, 2), 'utf-8');
+}
+
+function readCookies(req: IncomingMessage): Record<string, string> {
+  return String(req.headers.cookie || '').split(';').reduce<Record<string, string>>((result, part) => {
+    const separator = part.indexOf('=');
+    if (separator > 0) result[part.slice(0, separator).trim()] = decodeURIComponent(part.slice(separator + 1).trim());
+    return result;
+  }, {});
+}
+
+function isAuthenticated(req: IncomingMessage): boolean {
+  const token = readCookies(req)[AUTH_COOKIE];
+  const expiresAt = token ? sessions.get(token) : undefined;
+  if (!token || !expiresAt || expiresAt <= Date.now()) {
+    if (token) sessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
+function createSession(res: ServerResponse): void {
+  const token = randomBytes(32).toString('hex');
+  sessions.set(token, Date.now() + SESSION_TTL);
+  res.setHeader('Set-Cookie', `${AUTH_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/`);
+}
+
+function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 16_384) reject(new Error('Payload quá lớn'));
+    });
+    req.on('end', () => {
+      try { resolve(JSON.parse(body || '{}') as Record<string, unknown>); }
+      catch { reject(new Error('JSON không hợp lệ')); }
+    });
+  });
+}
+
+function jsonResponse(res: ServerResponse, status: number, payload: unknown): void {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(payload));
+}
 
 // Ensure data and uploads directories exist
 if (!fs.existsSync(DATA_DIR)) {
@@ -342,6 +431,71 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
     return true;
   }
 
+  // --- API: Local password authentication ---
+  if (pathname === '/api/auth/status' && method === 'GET') {
+    jsonResponse(res, 200, { configured: !!readAuth(), authenticated: isAuthenticated(req) });
+    return true;
+  }
+
+  if (pathname === '/api/auth/setup' && method === 'POST') {
+    if (readAuth()) {
+      jsonResponse(res, 409, { error: 'Mật khẩu đã được thiết lập' });
+      return true;
+    }
+    void readJsonBody(req).then((body) => {
+      const password = String(body.password || '');
+      if (password.length < 6) return jsonResponse(res, 400, { error: 'Mật khẩu phải có ít nhất 6 ký tự' });
+      savePassword(password);
+      createSession(res);
+      jsonResponse(res, 201, { success: true });
+    }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
+    return true;
+  }
+
+  if (pathname === '/api/auth/login' && method === 'POST') {
+    void readJsonBody(req).then((body) => {
+      const auth = readAuth();
+      if (!auth) return jsonResponse(res, 409, { error: 'Chưa thiết lập mật khẩu' });
+      if (!verifyPassword(String(body.password || ''), auth)) return jsonResponse(res, 401, { error: 'Mật khẩu không đúng' });
+      createSession(res);
+      jsonResponse(res, 200, { success: true });
+    }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
+    return true;
+  }
+
+  if (pathname === '/api/auth/logout' && method === 'POST') {
+    const token = readCookies(req)[AUTH_COOKIE];
+    if (token) sessions.delete(token);
+    res.setHeader('Set-Cookie', `${AUTH_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
+    jsonResponse(res, 200, { success: true });
+    return true;
+  }
+
+  if (pathname === '/api/auth/change-password' && method === 'POST') {
+    if (!isAuthenticated(req)) {
+      jsonResponse(res, 401, { error: 'Phiên đăng nhập đã hết hạn' });
+      return true;
+    }
+    void readJsonBody(req).then((body) => {
+      const auth = readAuth();
+      if (!auth || !verifyPassword(String(body.currentPassword || ''), auth)) {
+        return jsonResponse(res, 401, { error: 'Mật khẩu hiện tại không đúng' });
+      }
+      const nextPassword = String(body.newPassword || '');
+      if (nextPassword.length < 6) return jsonResponse(res, 400, { error: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+      savePassword(nextPassword, auth);
+      sessions.clear();
+      createSession(res);
+      jsonResponse(res, 200, { success: true });
+    }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
+    return true;
+  }
+
+  if (pathname.startsWith('/api/') && pathname !== '/api/status' && !isAuthenticated(req)) {
+    jsonResponse(res, 401, { error: 'Yêu cầu đăng nhập' });
+    return true;
+  }
+
   // --- API: Economic calendar (Trading Economics + public fallback) ---
   if (pathname === '/api/economic-calendar' && method === 'GET') {
     const today = new Date().toISOString().slice(0, 10);
@@ -408,6 +562,11 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
   if (storeMatch) {
     const storeName = storeMatch[1];
     const id = storeMatch[2];
+
+    if (!DATA_STORES.has(storeName)) {
+      jsonResponse(res, 404, { error: 'Store không tồn tại' });
+      return true;
+    }
 
     if (method === 'GET') {
       const data = readStore(storeName);
