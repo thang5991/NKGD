@@ -10,12 +10,15 @@ import {
 } from 'recharts';
 import { Trade } from '../../types/trade';
 import { formatMoney, formatDate } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface EquityCurveProps {
   trades: Trade[];
 }
 
 export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
+  const { activeAccount } = useAccounts();
+  const currency = activeAccount?.currency;
   const chartData = useMemo(() => {
     if (trades.length === 0) {
       return [{ index: 0, date: 'Khởi đầu', tradePnl: 0, equity: 0 }];
@@ -93,7 +96,7 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
                           data.equity >= 0 ? 'text-profit' : 'text-loss'
                         }`}
                       >
-                        {formatMoney(data.equity, true)}
+                        {formatMoney(data.equity, true, currency)}
                       </strong>
                     </div>
                     {data.index > 0 && (
@@ -104,7 +107,7 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
                             data.tradePnl >= 0 ? 'text-profit' : 'text-loss'
                           }`}
                         >
-                          {formatMoney(data.tradePnl, true)}
+                          {formatMoney(data.tradePnl, true, currency)}
                         </span>
                       </div>
                     )}

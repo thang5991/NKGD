@@ -68,7 +68,7 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
                   <strong className={`block font-mono text-sm ${
                     isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-muted'
                   }`}>
-                    {formatMoney(trade.pnl, true)}
+                    {formatMoney(trade.pnl, true, trade.accountCurrency)}
                   </strong>
                   <span className="mt-1 block font-mono text-[10px] text-muted">{formatR(trade.rMultiple)}</span>
                 </span>
@@ -150,7 +150,7 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
                       isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-muted'
                     }`}
                   >
-                    {formatMoney(trade.pnl, true)}
+                    {formatMoney(trade.pnl, true, trade.accountCurrency)}
                   </td>
 
                   <td

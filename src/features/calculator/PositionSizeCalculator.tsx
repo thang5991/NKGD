@@ -4,6 +4,7 @@ import { calculatePositionSize } from '../../utils/calculator';
 import { formatMoney } from '../../utils/formatters';
 import { useFxRate } from '../../hooks/useFxRate';
 import { Calculator, ArrowRight, Layers, Sparkles, RefreshCw } from 'lucide-react';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface PositionSizeCalculatorProps {
   pairOptions: PairOption[];
@@ -22,8 +23,9 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
   onOpenPairModal,
   onUseCalculatedLot,
 }) => {
-  const [balance, setBalance] = useState<string>('10000');
-  const [riskPercent, setRiskPercent] = useState<string>('1.0');
+  const { activeAccount } = useAccounts();
+  const [balance, setBalance] = useState<string>(() => String(activeAccount?.balance || 10000));
+  const [riskPercent, setRiskPercent] = useState<string>(() => String(activeAccount?.riskPercent || 1));
   const [symbol, setSymbol] = useState<string>('EURUSD');
   const [entry, setEntry] = useState<string>('');
   const [stopLoss, setStopLoss] = useState<string>('');
@@ -32,7 +34,13 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
     const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
     return now.toISOString().slice(0, 10);
   }, []);
-  const fxRate = useFxRate(symbol, today, 'USD');
+  const fxRate = useFxRate(symbol, today, activeAccount?.currency || 'USD');
+
+  useEffect(() => {
+    if (!activeAccount) return;
+    setBalance(String(activeAccount.balance));
+    setRiskPercent(String(activeAccount.riskPercent));
+  }, [activeAccount]);
 
   // Selected pair object
   const selectedPair = useMemo(() => {
@@ -213,7 +221,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
         <div>
           <span className="text-[10px] uppercase font-bold text-muted block">Số tiền Rủi ro</span>
           <strong className="text-xl font-mono font-bold text-text block mt-1">
-            {formatMoney(result.riskMoney)}
+            {formatMoney(result.riskMoney, false, activeAccount?.currency)}
           </strong>
         </div>
 

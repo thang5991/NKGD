@@ -1,18 +1,21 @@
 import React from 'react';
 import { TradeStats } from '../../hooks/useTrades';
 import { formatMoney, formatR } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface QuickStatsProps {
   stats: TradeStats;
 }
 
 export const QuickStats: React.FC<QuickStatsProps> = ({ stats }) => {
+  const { activeAccount } = useAccounts();
+  const currency = activeAccount?.currency;
   const rows = [
-    { label: 'Tổng lãi (Gross Profit)', value: formatMoney(stats.grossProfit), className: 'text-profit font-semibold' },
-    { label: 'Tổng lỗ (Gross Loss)', value: formatMoney(stats.grossLoss), className: 'text-loss font-semibold' },
-    { label: 'P&L Trung bình / Lệnh', value: formatMoney(stats.avgPnl, true), className: stats.avgPnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold' },
-    { label: 'Lệnh thắng lớn nhất', value: formatMoney(stats.bestTrade, true), className: 'text-profit font-semibold' },
-    { label: 'Lệnh thua lớn nhất', value: formatMoney(stats.worstTrade, true), className: 'text-loss font-semibold' },
+    { label: 'Tổng lãi (Gross Profit)', value: formatMoney(stats.grossProfit, false, currency), className: 'text-profit font-semibold' },
+    { label: 'Tổng lỗ (Gross Loss)', value: formatMoney(stats.grossLoss, false, currency), className: 'text-loss font-semibold' },
+    { label: 'P&L Trung bình / Lệnh', value: formatMoney(stats.avgPnl, true, currency), className: stats.avgPnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold' },
+    { label: 'Lệnh thắng lớn nhất', value: formatMoney(stats.bestTrade, true, currency), className: 'text-profit font-semibold' },
+    { label: 'Lệnh thua lớn nhất', value: formatMoney(stats.worstTrade, true, currency), className: 'text-loss font-semibold' },
     { label: 'Lệnh Hòa vốn (Breakeven)', value: `${stats.be} lệnh`, className: 'text-text' },
     { label: 'Trung bình R thực tế', value: formatR(stats.avgR), className: stats.avgR >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold' },
   ];

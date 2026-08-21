@@ -157,8 +157,16 @@ export const EconomicCalendarPage: React.FC = () => {
   const [currencies, setCurrencies] = useState<string[]>([]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 30_000);
-    return () => window.clearInterval(timer);
+    const updateClock = () => setNow(new Date());
+    updateClock();
+    const timer = window.setInterval(updateClock, 1_000);
+    document.addEventListener('visibilitychange', updateClock);
+    window.addEventListener('focus', updateClock);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', updateClock);
+      window.removeEventListener('focus', updateClock);
+    };
   }, []);
 
   const today = dateKey(now);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trade } from '../../types/trade';
 import { formatMoney, localDateKey } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface WeeklySummaryProps {
   currentDate: Date;
@@ -8,6 +9,7 @@ interface WeeklySummaryProps {
 }
 
 export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ currentDate, trades }) => {
+  const { activeAccount } = useAccounts();
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -101,7 +103,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ currentDate, trade
                   isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-muted'
                 }`}
               >
-                {formatMoney(w.pnl, true)}
+                {formatMoney(w.pnl, true, activeAccount?.currency)}
               </div>
             </div>
 

@@ -22,6 +22,7 @@ import { BlogProvider } from './hooks/useBlog';
 import { PairsProvider } from './hooks/usePairs';
 import { Trade, TradeFormData } from './types/trade';
 import { seedDemoData } from './utils/demoData';
+import { AccountsProvider, useAccounts } from './hooks/useAccounts';
 
 export const MainLayout: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
@@ -39,11 +40,12 @@ export const MainLayout: React.FC = () => {
   const { refreshPosts } = useBlog();
   const { pairOptions, refreshPairs } = usePairs();
   const { showToast } = useToast();
+  const { activeAccount, refreshAccounts } = useAccounts();
 
   const handleRefreshAll = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([refreshTrades(), refreshPosts(), refreshPairs()]);
+      await Promise.all([refreshTrades(), refreshPosts(), refreshPairs(), refreshAccounts()]);
     } finally {
       setIsRefreshing(false);
     }
@@ -61,7 +63,7 @@ export const MainLayout: React.FC = () => {
 
   const handleSeedDemo = async () => {
     try {
-      const result = await seedDemoData();
+      const result = await seedDemoData(activeAccount?.id);
       await handleRefreshAll();
       showToast(`Đã tạo ${result.trades} giao dịch và ${result.blog} bài viết mẫu`, 'success');
     } catch (err) {
@@ -238,13 +240,15 @@ export const MainLayout: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <ToastProvider>
-      <TradesProvider>
-        <BlogProvider>
-          <PairsProvider>
-            <MainLayout />
-          </PairsProvider>
-        </BlogProvider>
-      </TradesProvider>
+      <AccountsProvider>
+        <TradesProvider>
+          <BlogProvider>
+            <PairsProvider>
+              <MainLayout />
+            </PairsProvider>
+          </BlogProvider>
+        </TradesProvider>
+      </AccountsProvider>
     </ToastProvider>
   );
 };

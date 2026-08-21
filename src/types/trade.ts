@@ -24,6 +24,7 @@ export interface ImageRecord {
 
 export interface Trade {
   id: string;
+  accountId?: string;
   date: string; // ISO or YYYY-MM-DDTHH:mm
   exitDate?: string; // Closing timestamp, used for historical FX conversion
   symbol: string;

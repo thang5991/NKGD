@@ -174,7 +174,7 @@ export const TradeList: React.FC<TradeListProps> = ({
                       <strong className={`block font-mono text-sm ${
                         isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
                       }`}>
-                        {formatMoney(trade.pnl, true)}
+                        {formatMoney(trade.pnl, true, trade.accountCurrency)}
                       </strong>
                       <span className={`mt-1 block font-mono text-[10px] ${
                         trade.rMultiple > 0 ? 'text-profit' : trade.rMultiple < 0 ? 'text-loss' : 'text-muted'
@@ -317,7 +317,7 @@ export const TradeList: React.FC<TradeListProps> = ({
                           isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
                         }`}
                       >
-                        {formatMoney(trade.pnl, true)}
+                        {formatMoney(trade.pnl, true, trade.accountCurrency)}
                       </td>
 
                       <td
