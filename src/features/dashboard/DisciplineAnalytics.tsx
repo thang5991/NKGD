@@ -3,12 +3,15 @@ import { AlertTriangle, Banknote, ClipboardCheck, ShieldCheck, Target } from 'lu
 import { Trade } from '../../types/trade';
 import { calculateComplianceScore, COMPLIANCE_RULES } from '../../utils/compliance';
 import { formatMoney, formatPercent } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface DisciplineAnalyticsProps {
   trades: Trade[];
 }
 
 export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades }) => {
+  const { activeAccount } = useAccounts();
+  const currency = activeAccount?.currency;
   const analytics = useMemo(() => {
     const reviewed = trades.filter((trade) => trade.complianceReviewed);
     const withScore = reviewed.map((trade) => ({
@@ -111,7 +114,7 @@ export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades
           <strong className={`mt-2 block break-words font-mono text-xl ${
             analytics.compliantPnl >= 0 ? 'text-profit' : 'text-loss'
           }`}>
-            {formatMoney(analytics.compliantPnl, true)}
+            {formatMoney(analytics.compliantPnl, true, currency)}
           </strong>
           <span className="mt-1 block text-[10px] text-muted-2">{analytics.compliantCount} lệnh tuân thủ đầy đủ</span>
         </div>
@@ -124,7 +127,7 @@ export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades
           <strong className={`mt-2 block break-words font-mono text-xl ${
             analytics.brokenPnl >= 0 ? 'text-profit' : 'text-loss'
           }`}>
-            {formatMoney(analytics.brokenPnl, true)}
+            {formatMoney(analytics.brokenPnl, true, currency)}
           </strong>
           <span className="mt-1 block text-[10px] text-muted-2">{analytics.brokenCount} lệnh có vi phạm</span>
         </div>
@@ -135,7 +138,7 @@ export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades
             Chi phí lỗi ghi nhận
           </div>
           <strong className="mt-2 block break-words font-mono text-xl text-loss">
-            {formatMoney(analytics.mistakeCost)}
+            {formatMoney(analytics.mistakeCost, false, currency)}
           </strong>
           <span className="mt-1 block text-[10px] leading-relaxed text-muted-2">Tổng phần lỗ của lệnh có vi phạm</span>
         </div>
@@ -169,7 +172,7 @@ export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades
                   <div className="mt-1 flex items-center justify-between text-[9px] text-muted-2">
                     <span>{((rule.count / analytics.reviewedCount) * 100).toFixed(0)}% số lệnh đã review</span>
                     <span className={rule.pnl >= 0 ? 'font-mono text-profit' : 'font-mono text-loss'}>
-                      P&L liên quan {formatMoney(rule.pnl, true)}
+                      P&L liên quan {formatMoney(rule.pnl, true, currency)}
                     </span>
                   </div>
                 </div>

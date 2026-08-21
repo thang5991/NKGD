@@ -3,6 +3,7 @@ import { useTrades } from '../../hooks/useTrades';
 import { TradeList } from './TradeList';
 import { Trade } from '../../types/trade';
 import { formatMoney, formatPercent, formatR } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface TradesPageProps {
   onOpenAddModal: () => void;
@@ -15,6 +16,7 @@ export const TradesPage: React.FC<TradesPageProps> = ({
   onSelectTradeForDetail,
 }) => {
   const { trades, stats, loading, removeTrade } = useTrades();
+  const { activeAccount } = useAccounts();
 
   if (loading) {
     return (
@@ -53,7 +55,7 @@ export const TradesPage: React.FC<TradesPageProps> = ({
               stats.totalPnl > 0 ? 'text-profit' : stats.totalPnl < 0 ? 'text-loss' : 'text-text'
             }`}
           >
-            {formatMoney(stats.totalPnl, true)}
+            {formatMoney(stats.totalPnl, true, activeAccount?.currency)}
           </span>
         </div>
 

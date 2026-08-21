@@ -3,8 +3,9 @@ import { BlogPost } from '../types/blog';
 import { calculateTrade } from './calculator';
 import { saveTrade } from '../db/tradeRepository';
 import { saveBlogPost } from '../db/blogRepository';
+import { DEFAULT_ACCOUNT_ID } from '../types/account';
 
-export async function seedDemoData(): Promise<{ trades: number; blog: number }> {
+export async function seedDemoData(accountId = DEFAULT_ACCOUNT_ID): Promise<{ trades: number; blog: number }> {
   const now = Date.now();
   const dayMs = 86400000;
 
@@ -133,6 +134,7 @@ export async function seedDemoData(): Promise<{ trades: number; blog: number }> 
 
     const trade: Trade = {
       id: `demo-trade-${Math.random().toString(36).substring(2, 9)}`,
+      accountId,
       date: dateStr,
       symbol: item.symbol,
       side: item.side,

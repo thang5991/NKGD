@@ -1,6 +1,7 @@
 import { Trade } from './trade';
 import { BlogPost } from './blog';
 import { CustomPair } from './pair';
+import { TradingAccount } from './account';
 
 export interface AppSettings {
   accountBalance: number;
@@ -16,6 +17,7 @@ export interface BackupPayload {
   trades: Trade[];
   blog: BlogPost[];
   customPairs: CustomPair[];
+  accounts?: TradingAccount[];
   settings?: Partial<AppSettings>;
   images: Array<{
     id: string;

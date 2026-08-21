@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trade } from '../../types/trade';
 import { formatMoney, formatR, localDateKey } from '../../utils/formatters';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -15,6 +16,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   dateRange,
   onSelectDate,
 }) => {
+  const { activeAccount } = useAccounts();
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -154,7 +156,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       isWin ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
                     }`}
                   >
-                    {formatMoney(pnl, true)}
+                    {formatMoney(pnl, true, activeAccount?.currency)}
                   </div>
 
                   <div className="hidden items-center justify-between font-mono text-[10px] text-muted-2 sm:flex">

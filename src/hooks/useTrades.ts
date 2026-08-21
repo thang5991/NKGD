@@ -6,6 +6,8 @@ import { getImagesByIds, saveImage, deleteImage } from '../db/imageRepository';
 import { compressImageFile } from '../utils/imageCompressor';
 import { calculateTrade } from '../utils/calculator';
 import { ImageRecord } from '../types/trade';
+import { useAccounts } from './useAccounts';
+import { DEFAULT_ACCOUNT_ID } from '../types/account';
 
 export interface TradeStats {
   totalPnl: number;
@@ -24,14 +26,18 @@ export interface TradeStats {
 }
 
 function useTradesStore() {
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const [allTrades, setAllTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
+  const { activeAccountId, loading: accountsLoading } = useAccounts();
 
   const refreshTrades = useCallback(async () => {
     try {
       setLoading(true);
       const list = await getAllTrades();
-      setTrades(list);
+      const migrated = list.map((trade) => trade.accountId ? trade : { ...trade, accountId: DEFAULT_ACCOUNT_ID });
+      const legacyTrades = migrated.filter((_, index) => !list[index].accountId);
+      if (legacyTrades.length > 0) await Promise.all(legacyTrades.map(saveTrade));
+      setAllTrades(migrated);
     } catch (err) {
       console.error('Failed to load trades:', err);
       throw err;
@@ -41,8 +47,13 @@ function useTradesStore() {
   }, []);
 
   useEffect(() => {
-    void refreshTrades().catch(() => undefined);
-  }, [refreshTrades]);
+    if (!accountsLoading) void refreshTrades().catch(() => undefined);
+  }, [accountsLoading, refreshTrades]);
+
+  const trades = useMemo(
+    () => allTrades.filter((trade) => trade.accountId === activeAccountId),
+    [allTrades, activeAccountId]
+  );
 
   const saveTradeWithImages = async (
     tradeData: Omit<Trade, 'id' | 'pnl' | 'riskAmount' | 'rMultiple' | 'plannedRR' | 'result' | 'createdAt' | 'updatedAt' | 'imageRefs'> & {
@@ -110,6 +121,7 @@ function useTradesStore() {
 
     const tradeToSave: Trade = {
       id,
+      accountId: tradeData.accountId || activeAccountId || DEFAULT_ACCOUNT_ID,
       date: tradeData.date,
       exitDate: tradeData.exitDate || tradeData.date,
       symbol: tradeData.symbol.toUpperCase().trim(),
@@ -218,6 +230,7 @@ function useTradesStore() {
 
   return {
     trades,
+    allTrades,
     loading,
     stats,
     saveTradeWithImages,

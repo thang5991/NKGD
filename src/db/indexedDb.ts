@@ -4,6 +4,7 @@ export const STORES = {
   images: 'images',
   customPairs: 'customPairs',
   settings: 'settings',
+  accounts: 'accounts',
 } as const;
 
 export type StoreName = (typeof STORES)[keyof typeof STORES];

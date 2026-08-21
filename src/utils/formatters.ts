@@ -1,16 +1,20 @@
-export function formatMoney(amount: number, prefix: boolean = false): string {
+export function formatMoney(amount: number, prefix: boolean = false, currency = 'USD'): string {
   const num = Number(amount) || 0;
+  const normalizedCurrency = /^[A-Z]{3}$/.test(currency.toUpperCase()) ? currency.toUpperCase() : 'USD';
   const formatted = Math.abs(num).toLocaleString('en-US', {
+    style: 'currency',
+    currency: normalizedCurrency,
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
   if (prefix) {
-    if (num > 0) return `+$${formatted}`;
-    if (num < 0) return `-$${formatted}`;
-    return `$${formatted}`;
+    if (num > 0) return `+${formatted}`;
+    if (num < 0) return `-${formatted}`;
+    return formatted;
   }
-  return num < 0 ? `-$${formatted}` : `$${formatted}`;
+  return num < 0 ? `-${formatted}` : formatted;
 }
 
 export function formatNumber(num: number, maxDecimals: number = 2): string {

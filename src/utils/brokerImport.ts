@@ -2,6 +2,7 @@ import { saveTrade, getAllTrades } from '../db/tradeRepository';
 import { getPipMeta, calculateTrade } from './calculator';
 import { getFxRate, getQuoteCurrency } from '../db/fxRateRepository';
 import { Market, Side, Trade } from '../types/trade';
+import { DEFAULT_ACCOUNT_ID } from '../types/account';
 
 export type BrokerPlatform = 'mt5' | 'ctrader';
 
@@ -310,7 +311,7 @@ export async function parseBrokerStatement(file: File, platform: BrokerPlatform)
   return { platform, fileName: file.name, ...parsed };
 }
 
-export async function importBrokerTrades(parsed: BrokerParseResult): Promise<BrokerImportResult> {
+export async function importBrokerTrades(parsed: BrokerParseResult, accountId = DEFAULT_ACCOUNT_ID, currency = 'USD'): Promise<BrokerImportResult> {
   const existing = await getAllTrades();
   const existingIds = new Set(existing.map((trade) => trade.id));
   let imported = 0;
@@ -319,14 +320,14 @@ export async function importBrokerTrades(parsed: BrokerParseResult): Promise<Bro
 
   for (const candidate of parsed.trades) {
     const fingerprint = `${candidate.externalId}|${candidate.symbol}|${candidate.openTime}|${candidate.closeTime}`;
-    const id = `import-${parsed.platform}-${stableHash(fingerprint)}`;
+    const id = `import-${parsed.platform}-${stableHash(`${accountId}|${fingerprint}`)}`;
     if (existingIds.has(id)) {
       duplicates++;
       continue;
     }
 
     try {
-      const accountCurrency = 'USD';
+      const accountCurrency = currency.toUpperCase().trim() || 'USD';
       const market = inferMarket(candidate.symbol);
       const detectedQuote = getQuoteCurrency(candidate.symbol);
       const quoteCurrency = /^[A-Z]{3}$/.test(detectedQuote) ? detectedQuote : accountCurrency;
@@ -353,6 +354,7 @@ export async function importBrokerTrades(parsed: BrokerParseResult): Promise<Bro
 
       const trade: Trade = {
         id,
+        accountId,
         date: candidate.openTime,
         exitDate: candidate.closeTime,
         symbol: candidate.symbol,

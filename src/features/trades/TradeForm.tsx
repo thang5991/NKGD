@@ -8,6 +8,7 @@ import { useFxRate } from '../../hooks/useFxRate';
 import { Plus, X, Image as ImageIcon, Sparkles, Layers, RefreshCw, ShieldCheck, ShieldAlert, Check } from 'lucide-react';
 import { DateTimePicker } from '../../components/common/DateTimePicker';
 import { calculateComplianceScore, complianceGrade, COMPLIANCE_RULES } from '../../utils/compliance';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface TradeFormProps {
   initialTrade?: Partial<Trade> | Trade | null;
@@ -27,6 +28,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   loadImages,
 }) => {
   const { showToast } = useToast();
+  const { activeAccount } = useAccounts();
 
   const [date, setDate] = useState(() => {
     if (initialTrade?.date) return initialTrade.date;
@@ -61,7 +63,8 @@ export const TradeForm: React.FC<TradeFormProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<'date' | 'exitDate' | 'symbol' | 'entry' | 'exit', string>>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const fxRate = useFxRate(symbol, exitDate || date, 'USD');
+  const accountCurrency = initialTrade?.accountCurrency || activeAccount?.currency || 'USD';
+  const fxRate = useFxRate(symbol, exitDate || date, accountCurrency);
   const complianceScore = React.useMemo(() => calculateComplianceScore(violatedRules), [violatedRules]);
   const complianceStatus = complianceGrade(complianceScore);
 
@@ -205,6 +208,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
       setSaving(true);
       await onSubmit({
         id: initialTrade?.id,
+        accountId: initialTrade?.accountId || activeAccount?.id,
         date,
         exitDate: exitDate || date,
         symbol: symbol.toUpperCase().trim(),
@@ -523,7 +527,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               preview.pnl > 0 ? 'text-profit' : preview.pnl < 0 ? 'text-loss' : 'text-text'
             }`}
           >
-            {fxRate.loading ? 'Đang tính...' : preview.conversionMissing ? 'Chưa có tỷ giá' : formatMoney(preview.pnl, true)}
+            {fxRate.loading ? 'Đang tính...' : preview.conversionMissing ? 'Chưa có tỷ giá' : formatMoney(preview.pnl, true, accountCurrency)}
           </strong>
         </div>
 

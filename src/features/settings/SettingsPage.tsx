@@ -5,6 +5,8 @@ import { useToast } from '../../hooks/useToast';
 import { BrokerParseResult, BrokerPlatform, importBrokerTrades, parseBrokerStatement } from '../../utils/brokerImport';
 import { Modal } from '../../components/common/Modal';
 import { formatDateTime, formatMoney } from '../../utils/formatters';
+import { AccountManager } from './AccountManager';
+import { useAccounts } from '../../hooks/useAccounts';
 import {
   Download,
   Upload,
@@ -27,6 +29,7 @@ interface SettingsPageProps {
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
   const { showToast } = useToast();
+  const { activeAccount } = useAccounts();
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mt5InputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +80,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
 
     try {
       setBusy(true);
-      const res = await seedDemoData();
+      const res = await seedDemoData(activeAccount?.id);
       await onRefreshAll();
       showToast(`Đã tạo mẫu ${res.trades} giao dịch và ${res.blog} bài viết blog vào local data!`, 'success');
     } catch (err) {
@@ -137,7 +140,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
     if (!brokerPreview) return;
     try {
       setBusy(true);
-      const result = await importBrokerTrades(brokerPreview);
+      const result = await importBrokerTrades(brokerPreview, activeAccount?.id, activeAccount?.currency);
       await onRefreshAll();
       setBrokerPreview(null);
       showToast(
@@ -156,6 +159,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <AccountManager />
       {/* Storage Architecture Info */}
       <div className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">
@@ -219,6 +223,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
             <div className="flex items-center gap-2 text-muted-2">
               <span className="text-accent">📁 data/customPairs.json</span>
               <span className="text-[11px] text-muted">→ Cặp tiền & tài sản tùy chỉnh</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-2">
+              <span className="text-accent">📁 data/accounts.json</span>
+              <span className="text-[11px] text-muted">→ Tài khoản giao dịch & cấu hình vốn</span>
             </div>
             <div className="flex items-center gap-2 text-muted-2">
               <span className="text-accent">📁 data/uploads/</span>
@@ -389,7 +397,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
               <div className="col-span-2 sm:col-span-1 rounded-lg border border-line bg-bg-soft p-3">
                 <span className="block text-[10px] uppercase font-bold text-muted">P&L từ Broker</span>
                 <strong className="mt-1 block font-mono text-lg text-text">
-                  {formatMoney(brokerPreview.trades.reduce((sum, trade) => sum + trade.pnl, 0), true)}
+                  {formatMoney(brokerPreview.trades.reduce((sum, trade) => sum + trade.pnl, 0), true, activeAccount?.currency)}
                 </strong>
               </div>
             </div>
@@ -423,7 +431,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
                         <td className="px-3 py-2.5 text-right font-mono text-muted">{trade.entry}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-muted">{trade.exit}</td>
                         <td className={`px-3 py-2.5 text-right font-mono font-bold ${trade.pnl >= 0 ? 'text-profit' : 'text-loss'}`}>
-                          {formatMoney(trade.pnl, true)}
+                          {formatMoney(trade.pnl, true, activeAccount?.currency)}
                         </td>
                       </tr>
                     ))}

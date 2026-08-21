@@ -18,8 +18,10 @@ export default {
         muted: '#8F968C',
         'muted-2': '#687067',
         accent: '#B8F35A',
-        'accent-soft': 'rgba(184, 243, 90, 0.12)',
-        'accent-border': 'rgba(184, 243, 90, 0.28)',
+        // Solid tokens keep Tailwind opacity modifiers (/10, /50, ...) predictable.
+        // Values are tuned for readable accent surfaces on the dark theme.
+        'accent-soft': '#26351A',
+        'accent-border': '#526C35',
         profit: '#39D98A',
         'profit-soft': 'rgba(57, 217, 138, 0.12)',
         loss: '#FF665F',

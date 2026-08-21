@@ -6,12 +6,14 @@ import { dbGetAll, dbClear, STORES } from '../db/indexedDb';
 import { ImageRecord } from '../types/trade';
 import { BackupPayload } from '../types/database';
 import { blobToDataUrl, dataUrlToBlob, saveImage } from '../db/imageRepository';
+import { getAllAccounts, saveAccount } from '../db/accountRepository';
 
 export async function exportBackup(): Promise<void> {
   const trades = await getAllTrades();
   const blog = await getAllBlogPosts();
   const customPairs = await getAllCustomPairs();
   const settings = await getSettings();
+  const accounts = await getAllAccounts();
   const rawImages = await dbGetAll<ImageRecord>(STORES.images);
 
   const imagesExport: BackupPayload['images'] = [];
@@ -31,11 +33,12 @@ export async function exportBackup(): Promise<void> {
   }
 
   const payload: BackupPayload = {
-    version: '2.0',
+    version: '2.1',
     exportedAt: new Date().toISOString(),
     trades,
     blog,
     customPairs,
+    accounts,
     settings,
     images: imagesExport,
   };
@@ -62,6 +65,7 @@ export async function importBackup(file: File): Promise<{ tradesCount: number; b
   await dbClear(STORES.blog);
   await dbClear(STORES.images);
   await dbClear(STORES.customPairs);
+  await dbClear(STORES.accounts);
 
   let tradesCount = 0;
   let blogCount = 0;
@@ -101,6 +105,12 @@ export async function importBackup(file: File): Promise<{ tradesCount: number; b
     }
   }
 
+  if (Array.isArray(data.accounts)) {
+    for (const account of data.accounts) {
+      if (account?.id && account?.name) await saveAccount(account);
+    }
+  }
+
   // Restore Settings
   if (data.settings) {
     await saveSettings(data.settings);
@@ -132,4 +142,5 @@ export async function clearAllDatabase(): Promise<void> {
   await dbClear(STORES.blog);
   await dbClear(STORES.images);
   await dbClear(STORES.customPairs);
+  await dbClear(STORES.accounts);
 }

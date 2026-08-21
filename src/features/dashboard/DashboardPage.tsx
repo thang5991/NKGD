@@ -8,6 +8,7 @@ import { DisciplineAnalytics } from './DisciplineAnalytics';
 import { formatMoney, formatPercent, formatR } from '../../utils/formatters';
 import { DollarSign, Percent, TrendingUp, Target, PlusCircle, Sparkles } from 'lucide-react';
 import { Trade } from '../../types/trade';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface DashboardPageProps {
   onNavigateToTrades: () => void;
@@ -23,6 +24,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onSeedDemo,
 }) => {
   const { trades, stats, loading } = useTrades();
+  const { activeAccount } = useAccounts();
 
   if (loading) {
     return (
@@ -38,7 +40,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label="Tổng P&L"
-          value={formatMoney(stats.totalPnl, true)}
+          value={formatMoney(stats.totalPnl, true, activeAccount?.currency)}
           subValue={`${stats.totalTrades} giao dịch đã đóng`}
           trend={stats.totalPnl > 0 ? 'profit' : stats.totalPnl < 0 ? 'loss' : 'neutral'}
           icon={<DollarSign className="w-4 h-4 text-accent" />}

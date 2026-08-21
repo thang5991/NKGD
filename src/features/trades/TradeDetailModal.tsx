@@ -103,7 +103,7 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
                   isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-text'
                 }`}
               >
-                {formatMoney(trade.pnl, true)}
+                {formatMoney(trade.pnl, true, trade.accountCurrency)}
               </div>
             </div>
 
@@ -166,7 +166,7 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
 
             <div className="pt-2 border-t border-line/50">
               <span className="text-[10px] text-muted block uppercase font-semibold">Risk Ban đầu</span>
-              <span className="font-mono text-xs text-text">{formatMoney(trade.riskAmount)}</span>
+              <span className="font-mono text-xs text-text">{formatMoney(trade.riskAmount, false, trade.accountCurrency)}</span>
             </div>
 
             <div className="pt-2 border-t border-line/50">

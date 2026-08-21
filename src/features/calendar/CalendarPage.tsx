@@ -7,6 +7,7 @@ import { formatMoney, localDateKey, formatDateTime, formatR } from '../../utils/
 import { DateRangePicker } from '../../components/common/DateRangePicker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, DollarSign, Award, ArrowUpRight, ArrowDownRight, X, Filter, RotateCcw } from 'lucide-react';
 import { Trade } from '../../types/trade';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface CalendarPageProps {
   onSelectTrade: (trade: Trade) => void;
@@ -14,6 +15,7 @@ interface CalendarPageProps {
 
 export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => {
   const { trades } = useTrades();
+  const { activeAccount } = useAccounts();
   const [currentDate, setCurrentDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -299,7 +301,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
             <span>{rangeTrades.length} giao dịch</span>
             <span className="text-muted-2">·</span>
             <span className={periodStats.totalPnl >= 0 ? 'font-mono font-bold text-profit' : 'font-mono font-bold text-loss'}>
-              {formatMoney(periodStats.totalPnl, true)}
+              {formatMoney(periodStats.totalPnl, true, activeAccount?.currency)}
             </span>
           </div>
         )}
@@ -309,7 +311,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label={dateRange ? 'P&L Trong Khoảng' : 'P&L Trong Tháng'}
-          value={formatMoney(periodStats.totalPnl, true)}
+          value={formatMoney(periodStats.totalPnl, true, activeAccount?.currency)}
           subValue={`${periodStats.totalTrades} giao dịch ${dateRange ? 'trong khoảng' : 'trong tháng'}`}
           trend={periodStats.totalPnl > 0 ? 'profit' : periodStats.totalPnl < 0 ? 'loss' : 'neutral'}
           icon={<DollarSign className="w-4 h-4 text-accent" />}
@@ -331,7 +333,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
 
         <StatCard
           label="Ngày Tốt Nhất"
-          value={periodStats.bestDayPnl > 0 ? formatMoney(periodStats.bestDayPnl, true) : '—'}
+          value={periodStats.bestDayPnl > 0 ? formatMoney(periodStats.bestDayPnl, true, activeAccount?.currency) : '—'}
           subValue={periodStats.bestDayPnl > 0 ? `Ngày ${periodStats.bestDayDate}` : 'Chưa có lệnh thắng'}
           trend={periodStats.bestDayPnl > 0 ? 'profit' : 'neutral'}
           icon={<Award className="w-4 h-4 text-accent" />}
@@ -363,7 +365,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                   <span className={`font-mono text-[10px] font-bold ${
                     item.pnl > 0 ? 'text-profit' : item.pnl < 0 ? 'text-loss' : 'text-muted-2'
                   }`}>
-                    {formatMoney(item.pnl, true)}
+                    {formatMoney(item.pnl, true, activeAccount?.currency)}
                   </span>
                 </button>
               );
@@ -399,7 +401,8 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                 >
                   {formatMoney(
                     selectedDayTrades.reduce((s, t) => s + t.pnl, 0),
-                    true
+                    true,
+                    activeAccount?.currency
                   )}
                 </span>
               </p>
@@ -452,7 +455,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                         trade.pnl > 0 ? 'text-profit' : trade.pnl < 0 ? 'text-loss' : 'text-muted'
                       }`}
                     >
-                      {formatMoney(trade.pnl, true)}
+                      {formatMoney(trade.pnl, true, trade.accountCurrency)}
                     </span>
                     <span
                       className={`font-mono text-xs font-semibold ${

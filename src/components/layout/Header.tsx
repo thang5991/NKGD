@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, Plus, RefreshCw } from 'lucide-react';
+import { Menu, Plus, RefreshCw, WalletCards } from 'lucide-react';
 import { ActiveView } from './Sidebar';
+import { useAccounts } from '../../hooks/useAccounts';
 
 interface HeaderProps {
   activeView: ActiveView;
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   isRefreshing = false,
 }) => {
+  const { accounts, activeAccount, activeAccountId, setActiveAccountId } = useAccounts();
   const viewTitles: Record<ActiveView, { title: string; subtitle: string }> = {
     dashboard: {
       title: 'Dashboard Tổng quan',
@@ -47,8 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
       subtitle: 'Tính khối lượng vào lệnh theo Pip Value chuẩn Forex & Crypto',
     },
     settings: {
-      title: 'Dữ liệu & Sao lưu',
-      subtitle: 'Xuất/Nhập JSON backup, tạo dữ liệu mẫu và quản lý bộ nhớ',
+      title: 'Tài khoản & Dữ liệu',
+      subtitle: 'Quản lý tài khoản giao dịch, backup và bộ nhớ local',
     },
   };
 
@@ -77,6 +79,23 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <label className="relative flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2 py-1.5 text-xs">
+          <WalletCards className="h-4 w-4 shrink-0 text-accent" />
+          <span className="sr-only">Tài khoản giao dịch</span>
+          <select
+            value={activeAccountId}
+            onChange={(event) => setActiveAccountId(event.target.value)}
+            className="max-w-[105px] bg-transparent font-semibold text-text outline-none sm:max-w-[180px]"
+            title={activeAccount ? `${activeAccount.name} · ${activeAccount.currency}` : 'Chọn tài khoản'}
+          >
+            {accounts.filter((account) => !account.archived).map((account) => (
+              <option key={account.id} value={account.id} className="bg-surface text-text">
+                {account.name} · {account.currency}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {onRefresh && (
           <button
             type="button"
