@@ -206,7 +206,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
         </div>
 
         {/* File Structure Map */}
-        <div className="bg-[#0b0d0b] border border-line/80 rounded-lg p-3.5">
+        <div className="bg-bg-soft border border-line/80 rounded-lg p-3.5">
           <div className="flex items-center gap-2 text-xs font-bold text-muted mb-2">
             <FileCode className="w-4 h-4 text-accent" />
             <span>Cấu trúc Thư mục Dữ liệu Local</span>
@@ -315,7 +315,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
             type="button"
             disabled={busy}
             onClick={handleExport}
-            className="flex items-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span>Xuất file Đóng gói JSON</span>
@@ -353,7 +353,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-[#170e0e] border border-loss/20 rounded-xl p-5 shadow-sm space-y-3">
+      <div className="bg-loss-soft border border-loss/20 rounded-xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b border-loss/20 pb-3">
           <div>
             <h3 className="text-sm font-bold text-loss tracking-tight">Vùng Nguy hiểm (Danger Zone)</h3>
@@ -453,7 +453,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
                 type="button"
                 disabled={busy}
                 onClick={() => void confirmBrokerImport()}
-                className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-xs font-bold text-bg hover:bg-[#c5ff68] disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-xs font-bold text-bg hover:bg-accent-hover disabled:opacity-50"
               >
                 <Upload className="h-4 w-4" />
                 {busy ? 'Đang import...' : `Import ${brokerPreview.trades.length} giao dịch`}

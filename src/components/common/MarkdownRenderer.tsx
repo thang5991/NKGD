@@ -41,7 +41,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         <div key={`img-${matchIndex}`} className="my-3 block">
           <div
             onClick={() => setLightboxImage({ url: imgUrl, title: altText })}
-            className="group relative inline-block max-w-full rounded-xl overflow-hidden border border-line bg-[#0c0e0c] cursor-zoom-in hover:border-accent transition-all shadow-md"
+            className="group relative inline-block max-w-full rounded-xl overflow-hidden border border-line bg-bg-soft cursor-zoom-in hover:border-accent transition-all shadow-md"
           >
             <img
               src={imgUrl}
@@ -112,7 +112,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         elements.push(
-          <div key={`code-${i}`} className="my-3 rounded-xl overflow-hidden border border-line bg-[#080908]">
+          <div key={`code-${i}`} className="my-3 rounded-xl overflow-hidden border border-line bg-bg">
             {codeBlockLang && (
               <div className="px-3 py-1 bg-surface-2/70 border-b border-line text-[10px] uppercase font-mono text-muted">
                 {codeBlockLang}

@@ -44,7 +44,7 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
   }, [trades]);
 
   const isProfitable = chartData[chartData.length - 1]?.equity >= 0;
-  const strokeColor = isProfitable ? '#39D98A' : '#FF665F';
+  const strokeColor = isProfitable ? 'rgb(var(--profit))' : 'rgb(var(--loss))';
 
   if (trades.length === 0) {
     return (
@@ -67,19 +67,19 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
               <stop offset="95%" stopColor={strokeColor} stopOpacity={0.0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1f231f" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--line))" vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#687067"
+            stroke="rgb(var(--muted-2))"
             fontSize={10}
             tickLine={false}
-            axisLine={{ stroke: '#252925' }}
+            axisLine={{ stroke: 'rgb(var(--line))' }}
           />
           <YAxis
-            stroke="#687067"
+            stroke="rgb(var(--muted-2))"
             fontSize={10}
             tickLine={false}
-            axisLine={{ stroke: '#252925' }}
+            axisLine={{ stroke: 'rgb(var(--line))' }}
             tickFormatter={(val) => `$${val}`}
           />
           <Tooltip
@@ -87,7 +87,7 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ trades }) => {
               if (active && payload && payload.length) {
                 const data = payload[0].payload;
                 return (
-                  <div className="bg-[#111311] border border-line-strong p-2.5 rounded-lg shadow-xl text-xs">
+                  <div className="bg-surface border border-line-strong p-2.5 rounded-lg shadow-xl text-xs">
                     <div className="text-muted-2 text-[10px]">{data.date}</div>
                     <div className="flex items-center justify-between gap-4 mt-1">
                       <span className="text-muted">Equity:</span>

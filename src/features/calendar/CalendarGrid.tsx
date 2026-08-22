@@ -88,7 +88,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   return (
     <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-sm">
       {/* Weekdays Header */}
-      <div className="grid grid-cols-7 border-b border-line bg-[#0c0e0c]">
+      <div className="grid grid-cols-7 border-b border-line bg-bg-soft">
         {weekdays.map((day, i) => (
           <div
             key={i}
@@ -115,10 +115,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               key={idx}
               onClick={() => !cell.isOutside && cell.isInRange && onSelectDate && cell.key && onSelectDate(cell.key)}
               className={`relative flex min-h-[76px] min-w-0 flex-col justify-between overflow-hidden p-1 transition-colors sm:min-h-[110px] sm:p-2 md:min-h-[120px] ${
-                cell.isOutside ? 'opacity-30 bg-[#0a0c0a]' : 'bg-[#0d0f0d] hover:bg-[#131713]'
+                cell.isOutside ? 'opacity-30 bg-bg' : 'bg-bg-soft hover:bg-surface-2'
               } ${cell.isToday ? 'ring-1 ring-inset ring-accent/60' : ''} ${
-                !cell.isOutside && !cell.isInRange ? 'opacity-35 bg-[#090b09]' : ''
-              } ${dateRange && !cell.isOutside && cell.isInRange ? 'bg-[#10150d]' : ''} ${
+                !cell.isOutside && !cell.isInRange ? 'opacity-35 bg-bg' : ''
+              } ${dateRange && !cell.isOutside && cell.isInRange ? 'bg-accent-soft' : ''} ${
                 cell.isRangeStart || cell.isRangeEnd ? 'ring-1 ring-inset ring-accent bg-accent-soft/20' : ''
               } ${
                 isWin ? 'bg-gradient-to-br from-profit-soft/40 to-transparent' : ''

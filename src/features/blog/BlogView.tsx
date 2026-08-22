@@ -96,7 +96,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
           <button
             type="button"
             onClick={onEdit}
-            className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all"
+            className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all"
             title="Chỉnh sửa nội dung bài viết"
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -129,7 +129,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
             {post.tags.map((t, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#111411] border border-line text-muted-2"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-surface border border-line text-muted-2"
               >
                 <Tag className="w-3 h-3 text-accent" />
                 <span>#{t}</span>
@@ -157,7 +157,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
               <div
                 key={img.id}
                 onClick={() => setLightboxImage({ url: img.dataUrl || '', title: img.name })}
-                className="group relative rounded-xl overflow-hidden border border-line bg-[#0a0c0a] aspect-video cursor-zoom-in hover:border-accent transition-all shadow-sm"
+                className="group relative rounded-xl overflow-hidden border border-line bg-bg aspect-video cursor-zoom-in hover:border-accent transition-all shadow-sm"
               >
                 <img
                   src={img.dataUrl}

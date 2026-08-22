@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-64 bg-[#0b0c0b] border-r border-line flex flex-col justify-between p-4 transition-transform duration-200 ease-in-out ${
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-64 bg-bg-soft border-r border-line flex flex-col justify-between p-4 transition-transform duration-200 ease-in-out ${
           isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onOpenAddModal();
               onCloseMobile();
             }}
-            className="w-full mb-5 flex items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm transition-all"
+            className="w-full mb-5 flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Thêm giao dịch</span>

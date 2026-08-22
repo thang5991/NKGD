@@ -103,7 +103,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 }}
                 placeholder="VD: US30, NAS100, SOLUSDT, EURSGD"
                 required
-                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text uppercase font-mono outline-none ${
+                className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text uppercase font-mono outline-none ${
                   errors.symbol ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
                 }`}
               />
@@ -117,7 +117,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="VD: Dow Jones 30, Solana / Tether"
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
+                className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
               />
             </div>
 
@@ -126,7 +126,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
               <select
                 value={assetType}
                 onChange={(e) => handleAssetTypeChange(e.target.value as AssetType)}
-                className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
+                className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
               >
                 <option value="forex">Forex</option>
                 <option value="commodity">Commodity / Kim loại</option>
@@ -149,7 +149,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 }}
                 placeholder="0.0001"
                 required
-                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+                className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text font-mono outline-none ${
                   errors.pipSize ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
                 }`}
               />
@@ -168,7 +168,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
                 }}
                 placeholder="100000"
                 required
-                className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+                className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text font-mono outline-none ${
                   errors.contractSize ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
                 }`}
               />
@@ -178,7 +178,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2 px-4 rounded-lg text-xs shadow-sm transition-all"
+                className="w-full bg-accent hover:bg-accent-hover text-bg font-bold py-2 px-4 rounded-lg text-xs shadow-sm transition-all"
               >
                 Lưu Cặp Mới
               </button>
@@ -201,7 +201,7 @@ export const PairModal: React.FC<PairModalProps> = ({ isOpen, onClose }) => {
               {customPairs.map((pair) => (
                 <div
                   key={pair.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-[#0c0e0c] border border-line hover:border-line-strong transition-colors"
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-bg-soft border border-line hover:border-line-strong transition-colors"
                 >
                   <div className="min-w-0 pr-2">
                     <span className="font-bold font-mono text-xs text-text mr-2">{pair.symbol}</span>

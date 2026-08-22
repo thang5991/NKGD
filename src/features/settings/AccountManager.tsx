@@ -77,7 +77,7 @@ export const AccountManager: React.FC = () => {
             <p className="mt-0.5 text-xs text-muted">Tách riêng lịch sử, hiệu suất, số dư và mức rủi ro cho từng broker hoặc tài khoản prop.</p>
           </div>
         </div>
-        <button type="button" onClick={() => openForm()} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-bold text-bg hover:bg-[#c5ff68]">
+        <button type="button" onClick={() => openForm()} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-bold text-bg hover:bg-accent-hover">
           <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Thêm tài khoản</span>
         </button>
       </div>
@@ -120,7 +120,7 @@ export const AccountManager: React.FC = () => {
             <AccountField label="Số dư"><input required type="number" min="0" step="any" value={form.balance} onChange={(e) => setForm({ ...form, balance: Number(e.target.value) })} className="account-input" /></AccountField>
             <AccountField label="Rủi ro mặc định (%)"><input required type="number" min="0.01" step="0.01" value={form.riskPercent} onChange={(e) => setForm({ ...form, riskPercent: Number(e.target.value) })} className="account-input" /></AccountField>
           </div>
-          <div><label className="mb-1.5 block text-[11px] font-semibold text-muted">Màu nhận diện</label><div className="flex gap-2">{COLORS.map((color) => <button key={color} type="button" onClick={() => setForm({ ...form, color })} className={`h-7 w-7 rounded-full border-2 ${form.color === color ? 'border-white' : 'border-transparent'}`} style={{ backgroundColor: color }} />)}</div></div>
+          <div><label className="mb-1.5 block text-[11px] font-semibold text-muted">Màu nhận diện</label><div className="flex gap-2">{COLORS.map((color) => <button key={color} type="button" onClick={() => setForm({ ...form, color })} className={`h-7 w-7 rounded-full border-2 ${form.color === color ? 'border-text' : 'border-transparent'}`} style={{ backgroundColor: color }} />)}</div></div>
           <div className="flex justify-end gap-2 border-t border-line pt-4"><button type="button" onClick={() => setEditing(null)} className="rounded-lg px-4 py-2 text-xs text-muted hover:bg-surface-2">Hủy</button><button disabled={saving} className="rounded-lg bg-accent px-5 py-2 text-xs font-bold text-bg disabled:opacity-50">{saving ? 'Đang lưu...' : 'Lưu tài khoản'}</button></div>
         </form>
       </Modal>

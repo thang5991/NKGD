@@ -65,7 +65,7 @@ export const TradeList: React.FC<TradeListProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm theo mã, setup, ghi chú..."
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg pl-9 pr-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg pl-9 pr-3 py-2 text-xs text-text outline-none"
           />
         </div>
 
@@ -74,7 +74,7 @@ export const TradeList: React.FC<TradeListProps> = ({
           <select
             value={filterSide}
             onChange={(e) => setFilterSide(e.target.value)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="all">Tất cả Vị thế (Side)</option>
             <option value="Long">Long (Mua)</option>
@@ -87,7 +87,7 @@ export const TradeList: React.FC<TradeListProps> = ({
           <select
             value={filterTimeframe}
             onChange={(e) => setFilterTimeframe(e.target.value)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
           >
             <option value="all">Tất cả Timeframe</option>
             <option value="M1">M1</option>
@@ -107,7 +107,7 @@ export const TradeList: React.FC<TradeListProps> = ({
           <select
             value={filterResult}
             onChange={(e) => setFilterResult(e.target.value)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="all">Tất cả Kết quả</option>
             <option value="win">Thắng (Win / Profit)</option>
@@ -121,7 +121,7 @@ export const TradeList: React.FC<TradeListProps> = ({
           <select
             value={filterMarket}
             onChange={(e) => setFilterMarket(e.target.value)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="all">Tất cả Thị trường</option>
             <option value="Forex">Forex</option>

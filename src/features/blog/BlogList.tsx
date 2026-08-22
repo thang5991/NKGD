@@ -62,7 +62,7 @@ export const BlogList: React.FC<BlogListProps> = ({
 
         <button
           onClick={onNewPost}
-          className="flex items-center gap-1 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-1.5 px-3 rounded-lg text-xs shadow-sm transition-all"
+          className="flex items-center gap-1 bg-accent hover:bg-accent-hover text-bg font-bold py-1.5 px-3 rounded-lg text-xs shadow-sm transition-all"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Bài mới</span>
@@ -78,7 +78,7 @@ export const BlogList: React.FC<BlogListProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm theo tiêu đề, tag, nội dung..."
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg pl-8 pr-3 py-1.5 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg pl-8 pr-3 py-1.5 text-xs text-text outline-none"
           />
         </div>
 
@@ -120,7 +120,7 @@ export const BlogList: React.FC<BlogListProps> = ({
                 className={`p-3 rounded-xl border transition-all cursor-pointer text-left ${
                   isSelected
                     ? 'bg-surface-2 border-accent/60 shadow-md ring-1 ring-accent/30'
-                    : 'bg-[#0d0f0d] hover:bg-surface-2/60 border-line'
+                    : 'bg-bg-soft hover:bg-surface-2/60 border-line'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">

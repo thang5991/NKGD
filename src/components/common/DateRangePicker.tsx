@@ -299,7 +299,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ from, to, onAp
                 onApply(draftFrom, draftTo);
                 setIsOpen(false);
               }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-5 py-2 text-xs font-black text-bg transition-colors hover:bg-[#c5ff68] disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-5 py-2 text-xs font-black text-bg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none"
             >
               <Check className="h-3.5 w-3.5" />
               Áp dụng
@@ -316,7 +316,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ from, to, onAp
         type="button"
         onClick={openPicker}
         className={clsx(
-          'group flex w-full items-center gap-2 rounded-xl border bg-[#0c0e0c] px-3 py-3 text-left outline-none transition-all hover:border-line-strong focus:border-accent sm:gap-3 sm:px-3.5',
+          'group flex w-full items-center gap-2 rounded-xl border bg-bg-soft px-3 py-3 text-left outline-none transition-all hover:border-line-strong focus:border-accent sm:gap-3 sm:px-3.5',
           from && to ? 'border-accent-border' : 'border-line'
         )}
       >

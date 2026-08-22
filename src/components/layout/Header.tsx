@@ -1,8 +1,9 @@
 import React from 'react';
-import { LogOut, Menu, Plus, RefreshCw, WalletCards } from 'lucide-react';
+import { LogOut, Menu, Moon, Plus, RefreshCw, Sun, WalletCards } from 'lucide-react';
 import { ActiveView } from './Sidebar';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 interface HeaderProps {
   activeView: ActiveView;
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { accounts, activeAccount, activeAccountId, setActiveAccountId } = useAccounts();
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const viewTitles: Record<ActiveView, { title: string; subtitle: string }> = {
     dashboard: {
       title: 'Dashboard Tổng quan',
@@ -112,13 +114,23 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="rounded-lg border border-line p-2 text-muted transition-colors hover:bg-surface hover:text-text"
+          title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+          aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+
         <button type="button" onClick={() => void logout()} className="rounded-lg border border-line p-2 text-muted transition-colors hover:bg-surface hover:text-loss" title="Khóa và đăng xuất" aria-label="Khóa và đăng xuất">
           <LogOut className="h-4 w-4" />
         </button>
 
         <button
           onClick={onOpenAddModal}
-          className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2 px-3.5 rounded-lg text-xs shadow-sm transition-all"
+          className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-bg font-bold py-2 px-3.5 rounded-lg text-xs shadow-sm transition-all"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Giao dịch mới</span>
