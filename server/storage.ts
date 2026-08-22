@@ -2,55 +2,25 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type { IncomingMessage, ServerResponse } from 'http';
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../data');
 const UPLOADS_DIR = path.resolve(DATA_DIR, 'uploads');
-const AUTH_FILE = path.resolve(DATA_DIR, 'auth.json');
 const AUTH_COOKIE = 'nkgd_session';
 const SESSION_TTL = 12 * 60 * 60 * 1000;
 const sessions = new Map<string, number>();
 const DATA_STORES = new Set(['trades', 'blog', 'images', 'customPairs', 'settings', 'accounts']);
 
-interface AuthRecord {
-  salt: string;
-  hash: string;
-  createdAt: string;
-  updatedAt: string;
+function configuredPassword(): string {
+  return String(process.env.NKGD_APP_PASSWORD || '');
 }
 
-function readAuth(): AuthRecord | null {
-  try {
-    if (!fs.existsSync(AUTH_FILE)) return null;
-    const value = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8')) as AuthRecord;
-    return value?.salt && value?.hash ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function passwordHash(password: string, salt: string): string {
-  return scryptSync(password, salt, 64).toString('hex');
-}
-
-function verifyPassword(password: string, auth: AuthRecord): boolean {
-  const expected = Buffer.from(auth.hash, 'hex');
-  const actual = Buffer.from(passwordHash(password, auth.salt), 'hex');
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
-}
-
-function savePassword(password: string, previous?: AuthRecord | null): void {
-  const salt = randomBytes(16).toString('hex');
-  const now = new Date().toISOString();
-  const auth: AuthRecord = {
-    salt,
-    hash: passwordHash(password, salt),
-    createdAt: previous?.createdAt || now,
-    updatedAt: now,
-  };
-  fs.writeFileSync(AUTH_FILE, JSON.stringify(auth, null, 2), 'utf-8');
+function verifyConfiguredPassword(password: string): boolean {
+  const expected = createHash('sha256').update(configuredPassword()).digest();
+  const actual = createHash('sha256').update(password).digest();
+  return timingSafeEqual(expected, actual);
 }
 
 function readCookies(req: IncomingMessage): Record<string, string> {
@@ -433,30 +403,16 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
 
   // --- API: Local password authentication ---
   if (pathname === '/api/auth/status' && method === 'GET') {
-    jsonResponse(res, 200, { configured: !!readAuth(), authenticated: isAuthenticated(req) });
-    return true;
-  }
-
-  if (pathname === '/api/auth/setup' && method === 'POST') {
-    if (readAuth()) {
-      jsonResponse(res, 409, { error: 'Mật khẩu đã được thiết lập' });
-      return true;
-    }
-    void readJsonBody(req).then((body) => {
-      const password = String(body.password || '');
-      if (password.length < 6) return jsonResponse(res, 400, { error: 'Mật khẩu phải có ít nhất 6 ký tự' });
-      savePassword(password);
-      createSession(res);
-      jsonResponse(res, 201, { success: true });
-    }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
+    jsonResponse(res, 200, { configured: configuredPassword().length >= 6, authenticated: isAuthenticated(req) });
     return true;
   }
 
   if (pathname === '/api/auth/login' && method === 'POST') {
     void readJsonBody(req).then((body) => {
-      const auth = readAuth();
-      if (!auth) return jsonResponse(res, 409, { error: 'Chưa thiết lập mật khẩu' });
-      if (!verifyPassword(String(body.password || ''), auth)) return jsonResponse(res, 401, { error: 'Mật khẩu không đúng' });
+      if (configuredPassword().length < 6) {
+        return jsonResponse(res, 503, { error: 'Chưa cấu hình NKGD_APP_PASSWORD trong file .env' });
+      }
+      if (!verifyConfiguredPassword(String(body.password || ''))) return jsonResponse(res, 401, { error: 'Mật khẩu không đúng' });
       createSession(res);
       jsonResponse(res, 200, { success: true });
     }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
@@ -468,26 +424,6 @@ export function handleApiRequest(req: IncomingMessage, res: ServerResponse): boo
     if (token) sessions.delete(token);
     res.setHeader('Set-Cookie', `${AUTH_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
     jsonResponse(res, 200, { success: true });
-    return true;
-  }
-
-  if (pathname === '/api/auth/change-password' && method === 'POST') {
-    if (!isAuthenticated(req)) {
-      jsonResponse(res, 401, { error: 'Phiên đăng nhập đã hết hạn' });
-      return true;
-    }
-    void readJsonBody(req).then((body) => {
-      const auth = readAuth();
-      if (!auth || !verifyPassword(String(body.currentPassword || ''), auth)) {
-        return jsonResponse(res, 401, { error: 'Mật khẩu hiện tại không đúng' });
-      }
-      const nextPassword = String(body.newPassword || '');
-      if (nextPassword.length < 6) return jsonResponse(res, 400, { error: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
-      savePassword(nextPassword, auth);
-      sessions.clear();
-      createSession(res);
-      jsonResponse(res, 200, { success: true });
-    }).catch((error) => jsonResponse(res, 400, { error: error instanceof Error ? error.message : String(error) }));
     return true;
   }
 
