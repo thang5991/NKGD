@@ -1,12 +1,12 @@
 # NKGD — Personal Trading OS
 
-Phiên bản hiện tại: **v1.3.2**
+Phiên bản hiện tại: **v1.4**
 
 Ứng dụng nhật ký giao dịch chạy trên máy cá nhân dành cho trader Forex, Vàng, Crypto và các thị trường tài chính khác. NKGD giúp ghi lại giao dịch, tính khối lượng, theo dõi P&L, phân tích hiệu suất và lưu ảnh biểu đồ trong một giao diện dark mode thống nhất.
 
 ## Tính năng chính
 
-- **Đăng nhập local:** Thiết lập mật khẩu ở lần chạy đầu, bảo vệ cả giao diện và API bằng phiên đăng nhập; mật khẩu chỉ được lưu dưới dạng hash có salt.
+- **Đăng nhập bằng `.env`:** Mật khẩu được cấu hình bằng `NKGD_APP_PASSWORD`; ứng dụng yêu cầu nhập lại sau mỗi lần mở hoặc tải lại trang và bảo vệ cả giao diện lẫn API.
 - **Market top bar:** Hiển thị liên tục trạng thái phiên Á/Âu/Mỹ và tỷ giá EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, NZD/USD.
 - **Quản lý đa tài khoản:** Tạo nhiều tài khoản Live, Demo hoặc Prop; chuyển nhanh tài khoản đang làm việc và tách riêng toàn bộ giao dịch, Dashboard, Calendar, import broker, số dư cùng mức rủi ro mặc định.
 - **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất, equity curve và thống kê kỷ luật giao dịch.
@@ -61,19 +61,20 @@ Mặc định ứng dụng chạy tại [http://localhost:3000](http://localhost
 PORT=8080 npm start
 ```
 
-### Cấu hình Economic Calendar (tùy chọn)
+### Cấu hình mật khẩu và Economic Calendar
 
-Ứng dụng có nguồn lịch kinh tế dự phòng nên có thể chạy ngay mà không cần API key. Để sử dụng dữ liệu chính thức từ Trading Economics, sao chép file cấu hình mẫu và điền key một lần:
+Sao chép file cấu hình mẫu trước khi chạy ứng dụng:
 
 ```bash
 cp .env.example .env
 ```
 
 ```env
+NKGD_APP_PASSWORD=your-strong-local-password
 TRADING_ECONOMICS_API_KEY=your_api_key
 ```
 
-API key chỉ được đọc ở backend local và không được gửi xuống trình duyệt hoặc commit lên GitHub.
+`NKGD_APP_PASSWORD` là bắt buộc và phải có ít nhất 6 ký tự. Trading Economics API key là tùy chọn vì ứng dụng có nguồn lịch dự phòng. Các giá trị này chỉ được đọc ở backend local, không được gửi xuống trình duyệt hoặc commit lên GitHub.
 
 Lệnh hữu ích:
 
@@ -114,7 +115,6 @@ data/
 ├── settings.json     # Thiết lập ứng dụng
 ├── images.json       # Metadata hình ảnh
 ├── fxRates.json      # Cache tỷ giá tự động (tạo khi sử dụng)
-├── auth.json         # Salt/hash mật khẩu local (không nằm trong backup)
 └── uploads/          # Ảnh biểu đồ
 ```
 
@@ -136,8 +136,8 @@ Với CFD, chỉ số hoặc symbol có contract size đặc thù, hãy kiểm t
 
 ## Sao lưu và an toàn dữ liệu
 
-- Mật khẩu được băm bằng `scrypt`; file backup không chứa thông tin xác thực. Có thể đổi mật khẩu trong **Dữ liệu & Cài đặt → Bảo mật đăng nhập**.
-- Nếu quên mật khẩu, dừng server và xóa `data/auth.json`, sau đó mở lại ứng dụng để thiết lập mật khẩu mới. Dữ liệu giao dịch không bị ảnh hưởng.
+- Mật khẩu nằm trong `.env` qua biến `NKGD_APP_PASSWORD` và không được đóng gói vào backup. Muốn đổi mật khẩu, sửa biến này rồi khởi động lại server.
+- Nếu quên mật khẩu, đặt giá trị mới trong `.env` rồi khởi động lại ứng dụng. Dữ liệu giao dịch không bị ảnh hưởng.
 - Dữ liệu được lưu trên máy đang chạy server; ứng dụng không cung cấp đồng bộ cloud hoặc đăng nhập nhiều người dùng.
 - Không đưa file `.env`, dữ liệu giao dịch cá nhân hoặc ảnh biểu đồ riêng tư lên repository công khai.
 - Nên dùng chức năng **Xuất JSON Backup** thường xuyên và lưu bản backup ở vị trí khác máy.

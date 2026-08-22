@@ -7,7 +7,6 @@ import { Modal } from '../../components/common/Modal';
 import { formatDateTime, formatMoney } from '../../utils/formatters';
 import { AccountManager } from './AccountManager';
 import { useAccounts } from '../../hooks/useAccounts';
-import { SecuritySettings } from './SecuritySettings';
 import {
   Download,
   Upload,
@@ -161,7 +160,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onRefreshAll }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <AccountManager />
-      <SecuritySettings />
       {/* Storage Architecture Info */}
       <div className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">
