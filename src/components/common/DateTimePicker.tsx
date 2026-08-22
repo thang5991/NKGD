@@ -277,7 +277,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
                 onChange(toLocalDateTime(draft));
                 setIsOpen(false);
               }}
-              className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-bg transition-colors hover:bg-[#c5ff68] disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-bg transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Check className="h-3.5 w-3.5" />
               Xong
@@ -296,7 +296,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       <button
         type="button"
         onClick={openPicker}
-        className={`group flex w-full items-center justify-between rounded-lg border bg-[#0c0e0c] px-3 py-2 text-left outline-none transition-colors ${
+        className={`group flex w-full items-center justify-between rounded-lg border bg-bg-soft px-3 py-2 text-left outline-none transition-colors ${
           error ? 'border-loss/70 focus:border-loss' : 'border-line hover:border-line-strong focus:border-accent'
         }`}
       >

@@ -115,7 +115,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center sm:gap-3">
             <button
               onClick={onOpenAddModal}
-              className="flex items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow transition-all"
+              className="flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Thêm giao dịch đầu tiên</span>

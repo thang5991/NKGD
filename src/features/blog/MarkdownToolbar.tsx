@@ -46,7 +46,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-lg bg-[#0c0e0c] border border-line">
+    <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-lg bg-bg-soft border border-line">
       {tools.map((tool, idx) => {
         const Icon = tool.icon;
         return (

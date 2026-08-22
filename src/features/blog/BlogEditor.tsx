@@ -429,7 +429,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               type="button"
               disabled={saving || isUploadingImage}
               onClick={() => handleSave()}
-              className="flex items-center gap-1.5 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-bg font-bold py-1.5 px-4 rounded-lg text-xs shadow-sm transition-all disabled:opacity-50"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{saving ? 'Đang lưu...' : 'Lưu bài (Ctrl+S)'}</span>
@@ -449,7 +449,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 setType(e.target.value as BlogType);
                 handleModify();
               }}
-              className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none font-medium"
+              className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none font-medium"
             >
               <option value="journal">Nhật ký (Journal)</option>
               <option value="analysis">Phân tích (Analysis)</option>
@@ -471,14 +471,14 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 handleModify();
               }}
               placeholder="EURUSD, SMC, TâmLý, FVG, TinTức..."
-              className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
+              className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-1.5 text-xs text-text outline-none"
             />
           </div>
         </div>
 
         {/* View Mode Switcher: Soạn thảo / Xem trước / Song song */}
         <div className="flex items-center justify-between border-b border-line pb-2">
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0c0e0c] border border-line">
+          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-bg-soft border border-line">
             <button
               type="button"
               onClick={() => setActiveTab('edit')}
@@ -547,12 +547,12 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
               onClick={updateCursorPos}
               onBlur={updateCursorPos}
               placeholder="Viết nội dung bài viết, phân tích kỹ thuật hoặc đúc kết bài học tại đây... (Đặt con trỏ chuột ở bất kỳ đâu rồi nhấn Ctrl+V để dán và chèn ảnh ngay tại vị trí đó)"
-              className="flex-1 w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[340px]"
+              className="flex-1 w-full bg-bg-soft border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-y min-h-[340px]"
             />
           )}
 
           {activeTab === 'preview' && (
-            <div className="flex-1 w-full bg-[#0c0e0c] border border-line rounded-xl p-6 overflow-y-auto min-h-[340px]">
+            <div className="flex-1 w-full bg-bg-soft border border-line rounded-xl p-6 overflow-y-auto min-h-[340px]">
               <MarkdownRenderer content={content} />
             </div>
           )}
@@ -570,9 +570,9 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({
                 onClick={updateCursorPos}
                 onBlur={updateCursorPos}
                 placeholder="Nội dung markdown..."
-                className="w-full h-full bg-[#0c0e0c] border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-none"
+                className="w-full h-full bg-bg-soft border border-line focus:border-accent rounded-xl p-4 text-xs text-text font-mono leading-relaxed outline-none resize-none"
               />
-              <div className="w-full h-full bg-[#0c0e0c] border border-line rounded-xl p-4 overflow-y-auto">
+              <div className="w-full h-full bg-bg-soft border border-line rounded-xl p-4 overflow-y-auto">
                 <MarkdownRenderer content={content} />
               </div>
             </div>

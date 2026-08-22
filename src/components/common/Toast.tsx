@@ -15,10 +15,10 @@ export const ToastContainer: React.FC = () => {
   };
 
   const borders = {
-    success: 'border-profit/25 bg-[#0e1710]',
-    error: 'border-loss/25 bg-[#170e0e]',
-    warn: 'border-amber/25 bg-[#17150e]',
-    info: 'border-accent/25 bg-[#11170e]',
+    success: 'border-profit/25 bg-profit-soft',
+    error: 'border-loss/25 bg-loss-soft',
+    warn: 'border-amber/25 bg-surface-2',
+    info: 'border-accent/25 bg-accent-soft',
   };
 
   return (

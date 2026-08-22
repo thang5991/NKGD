@@ -293,7 +293,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               setFieldErrors((current) => ({ ...current, symbol: undefined }));
             }}
             required
-            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text outline-none ${
+            className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text outline-none ${
               fieldErrors.symbol ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
             }`}
           >
@@ -311,7 +311,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value as Timeframe)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
           >
             <option value="M1">M1 (1 phút)</option>
             <option value="M5">M5 (5 phút)</option>
@@ -330,7 +330,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <select
             value={side}
             onChange={(e) => setSide(e.target.value as Side)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="Long">Long (Mua)</option>
             <option value="Short">Short (Bán)</option>
@@ -342,7 +342,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <select
             value={market}
             onChange={(e) => setMarket(e.target.value as Market)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="Forex">Forex</option>
             <option value="Commodities">Commodities / Vàng</option>
@@ -387,7 +387,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             value={setup}
             onChange={(e) => setSetup(e.target.value)}
             placeholder="VD: Breakout, Pullback OTE, Sweep Liquidity, CHoCH..."
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           />
         </div>
 
@@ -396,7 +396,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <select
             value={emotion}
             onChange={(e) => setEmotion(e.target.value as Emotion)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none"
           >
             <option value="Bình tĩnh">Bình tĩnh (Calm)</option>
             <option value="Kỷ luật">Kỷ luật (Disciplined)</option>
@@ -423,7 +423,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             }}
             required
             placeholder="1.0850"
-            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+            className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text font-mono outline-none ${
               fieldErrors.entry ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
             }`}
           />
@@ -438,7 +438,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             value={stopLoss}
             onChange={(e) => setStopLoss(e.target.value)}
             placeholder="1.0820"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -450,7 +450,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             value={takeProfit}
             onChange={(e) => setTakeProfit(e.target.value)}
             placeholder="1.0920"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -466,7 +466,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             }}
             required
             placeholder="1.0910"
-            className={`w-full rounded-lg border bg-[#0c0e0c] px-3 py-2 text-xs text-text font-mono outline-none ${
+            className={`w-full rounded-lg border bg-bg-soft px-3 py-2 text-xs text-text font-mono outline-none ${
               fieldErrors.exit ? 'border-loss/70 focus:border-loss' : 'border-line focus:border-accent'
             }`}
           />
@@ -484,7 +484,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             value={lot}
             onChange={(e) => setLot(e.target.value)}
             placeholder="1.0"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -501,7 +501,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
               if (u > 0) setLot((u / meta.contractSize).toFixed(4));
             }}
             placeholder="100000"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -513,13 +513,13 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             value={fee}
             onChange={(e) => setFee(e.target.value)}
             placeholder="0"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
       </div>
 
       {/* Live Preview Card */}
-      <div className="grid grid-cols-1 gap-3 rounded-xl border border-line-strong bg-[#0e110e] p-3.5 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-line-strong bg-surface-2 p-3.5 sm:grid-cols-3">
         <div>
           <span className="text-[10px] uppercase font-bold text-muted block">P&L Dự tính</span>
           <strong
@@ -662,7 +662,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Lý do vào lệnh, điều làm tốt, điều cần cải thiện, diễn biến tâm lý..."
-          className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg p-3 text-xs text-text leading-relaxed outline-none"
+          className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg p-3 text-xs text-text leading-relaxed outline-none"
         />
       </div>
 
@@ -749,7 +749,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
         <button
           type="submit"
           disabled={saving || fxRate.loading || (fxRate.needsConversion && !fxRate.rate)}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-bg shadow-sm transition-all hover:bg-[#c5ff68] disabled:opacity-50 sm:w-auto sm:py-2"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-bg shadow-sm transition-all hover:bg-accent-hover disabled:opacity-50 sm:w-auto sm:py-2"
         >
           <Sparkles className="w-4 h-4" />
           <span>{saving ? 'Đang lưu...' : initialTrade ? 'Cập nhật giao dịch' : 'Lưu giao dịch'}</span>

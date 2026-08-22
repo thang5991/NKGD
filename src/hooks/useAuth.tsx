@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { AlertTriangle, Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, LockKeyhole, Moon, Sun } from 'lucide-react';
+import { useTheme } from './useTheme';
 
 interface AuthContextValue {
   authenticated: boolean;
@@ -82,6 +83,7 @@ function LoginScreen({ configured, startupError, onUnlock }: {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -101,6 +103,15 @@ function LoginScreen({ configured, startupError, onUnlock }: {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-bg px-4 py-10 text-text">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(184,243,90,0.12),transparent_38%)]" />
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="absolute right-4 top-4 z-10 rounded-lg border border-line bg-surface p-2.5 text-muted shadow-sm transition-colors hover:text-text"
+        title={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+        aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </button>
       <form onSubmit={submit} className="relative w-full max-w-sm rounded-2xl border border-line-strong bg-surface p-6 shadow-2xl sm:p-7">
         <div className="mb-6 text-center">
           <span className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border ${configured ? 'border-accent-border bg-accent-soft text-accent' : 'border-amber/30 bg-amber/10 text-amber'}`}>
@@ -125,7 +136,7 @@ function LoginScreen({ configured, startupError, onUnlock }: {
         )}
 
         {(startupError || error) && <p className="mt-3 rounded-lg border border-loss/30 bg-loss-soft px-3 py-2 text-[11px] text-loss">{startupError || error}</p>}
-        {configured && <button disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-xs font-black text-bg transition-colors hover:bg-[#c5ff68] disabled:opacity-50"><LockKeyhole className="h-4 w-4" />{busy ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>}
+        {configured && <button disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-xs font-black text-bg transition-colors hover:bg-accent-hover disabled:opacity-50"><LockKeyhole className="h-4 w-4" />{busy ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>}
         <p className="mt-4 text-center text-[10px] text-muted-2">Ứng dụng yêu cầu nhập lại mật khẩu sau mỗi lần tải trang.</p>
       </form>
     </main>

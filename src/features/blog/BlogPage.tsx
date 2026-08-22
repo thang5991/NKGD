@@ -143,7 +143,7 @@ export const BlogPage: React.FC = () => {
             </p>
             <button
               onClick={handleNewPost}
-              className="flex items-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-sm transition-all"
+              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-sm transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Tạo bài viết mới</span>

@@ -119,7 +119,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             value={balance}
             onChange={(e) => setBalance(e.target.value)}
             placeholder="10000"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -131,7 +131,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             value={riskPercent}
             onChange={(e) => setRiskPercent(e.target.value)}
             placeholder="1.0"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -140,7 +140,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
           <select
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text outline-none font-semibold"
           >
             {pairOptions.map((opt) => (
               <option key={opt.symbol} value={opt.symbol}>
@@ -158,7 +158,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             value={stopLossPips}
             onChange={(e) => setStopLossPips(e.target.value)}
             placeholder="VD: 30"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -170,7 +170,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
             placeholder="Tùy chọn: 1.0850"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -182,7 +182,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             value={stopLoss}
             onChange={(e) => setStopLoss(e.target.value)}
             placeholder="Tùy chọn: 1.0820"
-            className="w-full bg-[#0c0e0c] border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
+            className="w-full bg-bg-soft border border-line focus:border-accent rounded-lg px-3 py-2 text-xs text-text font-mono outline-none"
           />
         </div>
 
@@ -264,7 +264,7 @@ export const PositionSizeCalculator: React.FC<PositionSizeCalculatorProps> = ({
             type="button"
             onClick={handleUseSize}
             disabled={fxRate.loading || result.conversionMissing || result.lot <= 0}
-            className="flex w-full items-center justify-center gap-2 bg-accent hover:bg-[#c5ff68] text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="flex w-full items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-bg font-bold py-2.5 px-5 rounded-lg text-xs shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <Sparkles className="w-4 h-4" />
             <span>Dùng Khối lượng này cho Giao dịch</span>

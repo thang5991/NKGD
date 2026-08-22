@@ -34,7 +34,7 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
         </div>
         <button
           onClick={onViewAll}
-          className="text-xs font-semibold text-accent hover:text-[#c5ff68] transition-colors"
+          className="text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
         >
           Xem tất cả ({trades.length}) →
         </button>
