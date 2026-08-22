@@ -2,6 +2,7 @@ import React from 'react';
 import { Trade } from '../../types/trade';
 import { formatMoney, formatR, formatDateTime } from '../../utils/formatters';
 import { ArrowUpRight, ArrowDownRight, Image as ImageIcon } from 'lucide-react';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface RecentTradesProps {
   trades: Trade[];
@@ -41,8 +42,9 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
 
       <div className="divide-y divide-line/60 sm:hidden">
         {recent.map((trade) => {
-          const isProfit = trade.pnl > 0;
-          const isLoss = trade.pnl < 0;
+          const result = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+          const isProfit = result === 'win';
+          const isLoss = result === 'loss';
           return (
             <button
               key={trade.id}
@@ -99,8 +101,9 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
           </thead>
           <tbody className="divide-y divide-line/60 text-xs">
             {recent.map((trade) => {
-              const isProfit = trade.pnl > 0;
-              const isLoss = trade.pnl < 0;
+              const result = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+              const isProfit = result === 'win';
+              const isLoss = result === 'loss';
 
               return (
                 <tr
@@ -155,9 +158,9 @@ export const RecentTrades: React.FC<RecentTradesProps> = ({
 
                   <td
                     className={`py-3 px-4 font-mono font-semibold ${
-                      trade.rMultiple > 0
+                      isProfit
                         ? 'text-profit'
-                        : trade.rMultiple < 0
+                        : isLoss
                         ? 'text-loss'
                         : 'text-muted'
                     }`}

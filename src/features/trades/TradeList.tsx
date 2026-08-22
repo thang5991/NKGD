@@ -9,6 +9,7 @@ import {
   Trash2,
   Image as ImageIcon,
 } from 'lucide-react';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface TradeListProps {
   trades: Trade[];
@@ -43,9 +44,7 @@ export const TradeList: React.FC<TradeListProps> = ({
       const matchSide = filterSide === 'all' || t.side === filterSide;
       const matchResult =
         filterResult === 'all' ||
-        (filterResult === 'win' && t.pnl > 0) ||
-        (filterResult === 'loss' && t.pnl < 0) ||
-        (filterResult === 'be' && t.pnl === 0);
+        classifyTradeResult(t.pnl, t.riskAmount, t.rMultiple) === filterResult;
 
       const matchMarket = filterMarket === 'all' || t.market === filterMarket;
       const matchTimeframe = filterTimeframe === 'all' || t.timeframe === filterTimeframe;
@@ -145,8 +144,9 @@ export const TradeList: React.FC<TradeListProps> = ({
             </div>
           ) : (
             filteredTrades.map((trade) => {
-              const isProfit = trade.pnl > 0;
-              const isLoss = trade.pnl < 0;
+              const result = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+              const isProfit = result === 'win';
+              const isLoss = result === 'loss';
               return (
                 <article
                   key={trade.id}
@@ -177,7 +177,7 @@ export const TradeList: React.FC<TradeListProps> = ({
                         {formatMoney(trade.pnl, true, trade.accountCurrency)}
                       </strong>
                       <span className={`mt-1 block font-mono text-[10px] ${
-                        trade.rMultiple > 0 ? 'text-profit' : trade.rMultiple < 0 ? 'text-loss' : 'text-muted'
+                        isProfit ? 'text-profit' : isLoss ? 'text-loss' : 'text-muted'
                       }`}>
                         {formatR(trade.rMultiple)}
                       </span>
@@ -256,8 +256,9 @@ export const TradeList: React.FC<TradeListProps> = ({
                 </tr>
               ) : (
                 filteredTrades.map((trade) => {
-                  const isProfit = trade.pnl > 0;
-                  const isLoss = trade.pnl < 0;
+                  const result = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+                  const isProfit = result === 'win';
+                  const isLoss = result === 'loss';
 
                   return (
                     <tr
@@ -322,9 +323,9 @@ export const TradeList: React.FC<TradeListProps> = ({
 
                       <td
                         className={`py-3 px-4 font-mono font-semibold ${
-                          trade.rMultiple > 0
+                          isProfit
                             ? 'text-profit'
-                            : trade.rMultiple < 0
+                            : isLoss
                             ? 'text-loss'
                             : 'text-muted'
                         }`}

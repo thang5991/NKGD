@@ -2,6 +2,7 @@ import React from 'react';
 import { Trade } from '../../types/trade';
 import { formatMoney, localDateKey } from '../../utils/formatters';
 import { useAccounts } from '../../hooks/useAccounts';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface WeeklySummaryProps {
   currentDate: Date;
@@ -29,7 +30,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ currentDate, trade
       if (!dailyPnlMap[key]) dailyPnlMap[key] = { pnl: 0, count: 0, wins: 0 };
       dailyPnlMap[key].pnl += t.pnl;
       dailyPnlMap[key].count += 1;
-      if (t.pnl > 0) dailyPnlMap[key].wins += 1;
+      if (classifyTradeResult(t.pnl, t.riskAmount, t.rMultiple) === 'win') dailyPnlMap[key].wins += 1;
     });
 
     const weeks = [];

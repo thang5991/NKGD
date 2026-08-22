@@ -1,5 +1,5 @@
 import { saveTrade, getAllTrades } from '../db/tradeRepository';
-import { getPipMeta, calculateTrade } from './calculator';
+import { getPipMeta, calculateTrade, classifyTradeResult } from './calculator';
 import { getFxRate, getQuoteCurrency } from '../db/fxRateRepository';
 import { Market, Side, Trade } from '../types/trade';
 import { DEFAULT_ACCOUNT_ID } from '../types/account';
@@ -383,7 +383,7 @@ export async function importBrokerTrades(parsed: BrokerParseResult, accountId = 
         riskAmount,
         rMultiple: Number(rMultiple.toFixed(2)),
         plannedRR: calc.plannedRR,
-        result: pnl > 0 ? 'win' : pnl < 0 ? 'loss' : 'be',
+        result: classifyTradeResult(pnl, riskAmount, rMultiple),
         importSource: parsed.platform,
         externalId: candidate.externalId,
         createdAt: now,

@@ -15,6 +15,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { calculateComplianceScore, complianceGrade, COMPLIANCE_RULES } from '../../utils/compliance';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface TradeDetailModalProps {
   isOpen: boolean;
@@ -47,8 +48,9 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
 
   if (!trade) return null;
 
-  const isProfit = trade.pnl > 0;
-  const isLoss = trade.pnl < 0;
+  const normalizedResult = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+  const isProfit = normalizedResult === 'win';
+  const isLoss = normalizedResult === 'loss';
   const complianceScore = Number.isFinite(trade.complianceScore)
     ? Number(trade.complianceScore)
     : calculateComplianceScore(trade.violatedRules || []);
@@ -112,9 +114,9 @@ export const TradeDetailModal: React.FC<TradeDetailModalProps> = ({
                 <div className="text-[10px] uppercase font-bold text-muted">Bội số R</div>
                 <div
                   className={`text-lg font-mono font-bold ${
-                    trade.rMultiple > 0
+                    isProfit
                       ? 'text-profit'
-                      : trade.rMultiple < 0
+                      : isLoss
                       ? 'text-loss'
                       : 'text-text'
                   }`}

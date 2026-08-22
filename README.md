@@ -1,6 +1,6 @@
 # NKGD — Personal Trading OS
 
-Phiên bản hiện tại: **v1.3.1**
+Phiên bản hiện tại: **v1.3.2**
 
 Ứng dụng nhật ký giao dịch chạy trên máy cá nhân dành cho trader Forex, Vàng, Crypto và các thị trường tài chính khác. NKGD giúp ghi lại giao dịch, tính khối lượng, theo dõi P&L, phân tích hiệu suất và lưu ảnh biểu đồ trong một giao diện dark mode thống nhất.
 
@@ -10,6 +10,7 @@ Phiên bản hiện tại: **v1.3.1**
 - **Market top bar:** Hiển thị liên tục trạng thái phiên Á/Âu/Mỹ và tỷ giá EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, NZD/USD.
 - **Quản lý đa tài khoản:** Tạo nhiều tài khoản Live, Demo hoặc Prop; chuyển nhanh tài khoản đang làm việc và tách riêng toàn bộ giao dịch, Dashboard, Calendar, import broker, số dư cùng mức rủi ro mặc định.
 - **Dashboard hiệu suất:** Tổng P&L, win rate, profit factor, Average R, lệnh tốt/xấu nhất, equity curve và thống kê kỷ luật giao dịch.
+- **Phân tích theo timeframe:** So sánh thời gian giữ lệnh trung bình, Win Rate, Profit Factor, P&L, Average R và phân bổ Win/Loss/BE giữa các khung thời gian.
 - **Nhật ký giao dịch:** Lưu thời gian mở/đóng lệnh, symbol, timeframe, side, setup, cảm xúc, Entry/SL/TP/Exit, lot, units, phí, ghi chú và nhiều ảnh biểu đồ.
 - **Chấm điểm tuân thủ:** Review từng lệnh theo 7 quy tắc, tự tính điểm 0–100 và so sánh win rate, P&L đúng kế hoạch, P&L phá kỷ luật, lỗi thường gặp cùng chi phí do lỗi giao dịch.
 - **P&L theo đúng đơn vị tiền tệ:** Tự nhận diện đồng tiền định giá và tự động lấy tỷ giá lịch sử để quy đổi về USD; tỷ giá được cache tại máy.

@@ -1,7 +1,7 @@
 import { dbGet, dbGetAll, dbPut, dbDelete, STORES } from './indexedDb';
 import { Trade } from '../types/trade';
 import { deleteImagesByOwner } from './imageRepository';
-import { calculateTrade } from '../utils/calculator';
+import { calculateTrade, classifyTradeResult } from '../utils/calculator';
 import { getQuoteCurrency, getTradeFxRate } from './fxRateRepository';
 
 export async function getAllTrades(): Promise<Trade[]> {
@@ -9,12 +9,19 @@ export async function getAllTrades(): Promise<Trade[]> {
   const migrated: Trade[] = [];
 
   for (const trade of trades) {
+    const normalizedResult = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
     const alreadyConverted =
       Number(trade.conversionRate) > 0 &&
       trade.pnlQuote != null &&
       trade.riskAmountQuote != null;
     if (alreadyConverted) {
-      migrated.push(trade);
+      if (trade.result !== normalizedResult) {
+        const updated = { ...trade, result: normalizedResult, updatedAt: new Date().toISOString() };
+        await dbPut(STORES.trades, updated);
+        migrated.push(updated);
+      } else {
+        migrated.push(trade);
+      }
       continue;
     }
 
@@ -58,7 +65,7 @@ export async function getAllTrades(): Promise<Trade[]> {
       migrated.push(updated);
     } catch (error) {
       console.warn(`Could not migrate FX conversion for trade ${trade.id}:`, error);
-      migrated.push(trade);
+      migrated.push({ ...trade, result: normalizedResult });
     }
   }
 

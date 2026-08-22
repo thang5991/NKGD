@@ -95,6 +95,25 @@ export interface TradeCalculationOutput {
   conversionMissing: boolean;
 }
 
+export const BREAKEVEN_R_THRESHOLD = 0.1;
+
+export function classifyTradeResult(
+  pnl: number,
+  riskAmount?: number,
+  rMultiple?: number
+): 'win' | 'loss' | 'be' {
+  if (pnl < -0.0001) return 'loss';
+  if (pnl <= 0.0001) return 'be';
+
+  const effectiveR = Number(riskAmount) > 0
+    ? pnl / Number(riskAmount)
+    : Number(rMultiple) > 0
+      ? Number(rMultiple)
+      : null;
+
+  return effectiveR !== null && effectiveR < BREAKEVEN_R_THRESHOLD ? 'be' : 'win';
+}
+
 export function calculateTrade(input: TradeCalculationInput): TradeCalculationOutput {
   const entry = Number(input.entry) || 0;
   const exit = Number(input.exit) || 0;
@@ -155,14 +174,7 @@ export function calculateTrade(input: TradeCalculationInput): TradeCalculationOu
     }
   }
 
-  let result: 'win' | 'loss' | 'be' = 'be';
-  if (pnl > 0.0001) {
-    result = 'win';
-  } else if (pnl < -0.0001) {
-    result = 'loss';
-  } else {
-    result = 'be';
-  }
+  const result = classifyTradeResult(pnl, riskAmount, rMultiple);
 
   return {
     pnl: Number(pnl.toFixed(2)),

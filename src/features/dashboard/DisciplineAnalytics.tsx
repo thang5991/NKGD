@@ -4,6 +4,7 @@ import { Trade } from '../../types/trade';
 import { calculateComplianceScore, COMPLIANCE_RULES } from '../../utils/compliance';
 import { formatMoney, formatPercent } from '../../utils/formatters';
 import { useAccounts } from '../../hooks/useAccounts';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface DisciplineAnalyticsProps {
   trades: Trade[];
@@ -22,7 +23,7 @@ export const DisciplineAnalytics: React.FC<DisciplineAnalyticsProps> = ({ trades
     }));
     const compliant = withScore.filter(({ trade, score }) => score === 100 && (trade.violatedRules || []).length === 0);
     const broken = withScore.filter(({ trade, score }) => score < 100 || (trade.violatedRules || []).length > 0);
-    const compliantWins = compliant.filter(({ trade }) => trade.pnl > 0).length;
+    const compliantWins = compliant.filter(({ trade }) => classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple) === 'win').length;
     const compliantPnl = compliant.reduce((sum, { trade }) => sum + trade.pnl, 0);
     const brokenPnl = broken.reduce((sum, { trade }) => sum + trade.pnl, 0);
     const mistakeCost = broken.reduce((sum, { trade }) => sum + Math.abs(Math.min(0, trade.pnl)), 0);
