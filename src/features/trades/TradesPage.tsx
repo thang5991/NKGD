@@ -44,7 +44,7 @@ export const TradesPage: React.FC<TradesPageProps> = ({
               stats.winRate >= 50 ? 'text-profit' : stats.winRate > 0 ? 'text-loss' : 'text-text'
             }`}
           >
-            {formatPercent(stats.winRate)} ({stats.wins}W / {stats.losses}L)
+            {formatPercent(stats.winRate)} ({stats.wins}W / {stats.losses}L / {stats.be}BE)
           </span>
         </div>
 

@@ -4,7 +4,7 @@ import { Trade } from '../types/trade';
 import { getAllTrades, saveTrade, deleteTrade } from '../db/tradeRepository';
 import { getImagesByIds, saveImage, deleteImage } from '../db/imageRepository';
 import { compressImageFile } from '../utils/imageCompressor';
-import { calculateTrade } from '../utils/calculator';
+import { calculateTrade, classifyTradeResult } from '../utils/calculator';
 import { ImageRecord } from '../types/trade';
 import { useAccounts } from './useAccounts';
 import { DEFAULT_ACCOUNT_ID } from '../types/account';
@@ -193,12 +193,15 @@ function useTradesStore() {
     }
 
     const pnls = trades.map((t) => t.pnl);
-    const winTrades = trades.filter((t) => t.pnl > 0);
-    const lossTrades = trades.filter((t) => t.pnl < 0);
-    const beTrades = trades.filter((t) => t.pnl === 0);
+    const resultOf = (trade: Trade) => classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+    const winTrades = trades.filter((trade) => resultOf(trade) === 'win');
+    const lossTrades = trades.filter((trade) => resultOf(trade) === 'loss');
+    const beTrades = trades.filter((trade) => resultOf(trade) === 'be');
+    const profitableTrades = trades.filter((trade) => trade.pnl > 0);
+    const losingTrades = trades.filter((trade) => trade.pnl < 0);
 
-    const grossProfit = winTrades.reduce((sum, t) => sum + t.pnl, 0);
-    const grossLoss = Math.abs(lossTrades.reduce((sum, t) => sum + t.pnl, 0));
+    const grossProfit = profitableTrades.reduce((sum, trade) => sum + trade.pnl, 0);
+    const grossLoss = Math.abs(losingTrades.reduce((sum, trade) => sum + trade.pnl, 0));
     const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
 
     const validRs = trades.map((t) => t.rMultiple).filter((r) => !isNaN(r) && isFinite(r));

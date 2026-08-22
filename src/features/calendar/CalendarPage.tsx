@@ -8,6 +8,7 @@ import { DateRangePicker } from '../../components/common/DateRangePicker';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, DollarSign, Award, ArrowUpRight, ArrowDownRight, X, Filter, RotateCcw } from 'lucide-react';
 import { Trade } from '../../types/trade';
 import { useAccounts } from '../../hooks/useAccounts';
+import { classifyTradeResult } from '../../utils/calculator';
 
 interface CalendarPageProps {
   onSelectTrade: (trade: Trade) => void;
@@ -419,7 +420,9 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
             <div className="text-xs text-muted py-3">Không có giao dịch nào trong ngày này.</div>
           ) : (
             <div className="space-y-2">
-              {selectedDayTrades.map((trade) => (
+              {selectedDayTrades.map((trade) => {
+                const result = classifyTradeResult(trade.pnl, trade.riskAmount, trade.rMultiple);
+                return (
                 <div
                   key={trade.id}
                   onClick={() => onSelectTrade(trade)}
@@ -452,16 +455,16 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                     </span>
                     <span
                       className={`font-mono font-bold text-xs ${
-                        trade.pnl > 0 ? 'text-profit' : trade.pnl < 0 ? 'text-loss' : 'text-muted'
+                        result === 'win' ? 'text-profit' : result === 'loss' ? 'text-loss' : 'text-muted'
                       }`}
                     >
                       {formatMoney(trade.pnl, true, trade.accountCurrency)}
                     </span>
                     <span
                       className={`font-mono text-xs font-semibold ${
-                        trade.rMultiple > 0
+                        result === 'win'
                           ? 'text-profit'
-                          : trade.rMultiple < 0
+                          : result === 'loss'
                           ? 'text-loss'
                           : 'text-muted'
                       }`}
@@ -470,7 +473,8 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ onSelectTrade }) => 
                     </span>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

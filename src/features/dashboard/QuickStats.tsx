@@ -16,7 +16,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ stats }) => {
     { label: 'P&L Trung bình / Lệnh', value: formatMoney(stats.avgPnl, true, currency), className: stats.avgPnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold' },
     { label: 'Lệnh thắng lớn nhất', value: formatMoney(stats.bestTrade, true, currency), className: 'text-profit font-semibold' },
     { label: 'Lệnh thua lớn nhất', value: formatMoney(stats.worstTrade, true, currency), className: 'text-loss font-semibold' },
-    { label: 'Lệnh Hòa vốn (Breakeven)', value: `${stats.be} lệnh`, className: 'text-text' },
+    { label: 'Lệnh Hòa vốn (P&L ≈ 0 hoặc lãi < 0.1R)', value: `${stats.be} lệnh`, className: 'text-text' },
     { label: 'Trung bình R thực tế', value: formatR(stats.avgR), className: stats.avgR >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold' },
   ];
 

@@ -9,6 +9,7 @@ import { formatMoney, formatPercent, formatR } from '../../utils/formatters';
 import { DollarSign, Percent, TrendingUp, Target, PlusCircle, Sparkles } from 'lucide-react';
 import { Trade } from '../../types/trade';
 import { useAccounts } from '../../hooks/useAccounts';
+import { TimeframeAnalytics } from './TimeframeAnalytics';
 
 interface DashboardPageProps {
   onNavigateToTrades: () => void;
@@ -49,7 +50,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <StatCard
           label="Win Rate"
           value={formatPercent(stats.winRate)}
-          subValue={`${stats.wins} Thắng / ${stats.losses} Thua`}
+          subValue={`${stats.wins} Thắng / ${stats.losses} Thua / ${stats.be} Hòa`}
           trend={stats.winRate >= 50 ? 'profit' : stats.winRate > 0 ? 'loss' : 'neutral'}
           icon={<Percent className="w-4 h-4 text-accent" />}
         />
@@ -87,6 +88,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           <QuickStats stats={stats} />
         </div>
       </div>
+
+      <TimeframeAnalytics trades={trades} />
 
       <DisciplineAnalytics trades={trades} />
 

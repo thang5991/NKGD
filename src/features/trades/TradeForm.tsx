@@ -524,7 +524,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
           <span className="text-[10px] uppercase font-bold text-muted block">P&L Dự tính</span>
           <strong
             className={`text-lg font-mono font-bold block mt-1 ${
-              preview.pnl > 0 ? 'text-profit' : preview.pnl < 0 ? 'text-loss' : 'text-text'
+              preview.result === 'win' ? 'text-profit' : preview.result === 'loss' ? 'text-loss' : 'text-text'
             }`}
           >
             {fxRate.loading ? 'Đang tính...' : preview.conversionMissing ? 'Chưa có tỷ giá' : formatMoney(preview.pnl, true, accountCurrency)}
