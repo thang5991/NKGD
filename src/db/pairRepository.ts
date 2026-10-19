@@ -45,7 +45,7 @@ export const BUILTIN_FOREX_PAIRS: PairOption[] = [
   { symbol: 'NZDCAD', displayName: 'NZD/CAD', assetType: 'forex', pipSize: 0.0001, contractSize: 100000 },
 
   // Popular Metals / Crypto default entries
-  { symbol: 'XAUUSD', displayName: 'Gold (XAU/USD)', assetType: 'commodity', pipSize: 0.1, contractSize: 100 },
+  { symbol: 'XAUUSD', displayName: 'Gold (XAU/USD)', assetType: 'commodity', pipSize: 0.01, contractSize: 100 },
   { symbol: 'BTCUSDT', displayName: 'Bitcoin (BTC/USDT)', assetType: 'crypto', pipSize: 1.0, contractSize: 1 },
   { symbol: 'ETHUSDT', displayName: 'Ethereum (ETH/USDT)', assetType: 'crypto', pipSize: 0.1, contractSize: 1 },
 ];
